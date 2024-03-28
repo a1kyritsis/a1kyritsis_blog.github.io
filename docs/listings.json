@@ -2,8 +2,10 @@
   {
     "listing": "/index.html",
     "items": [
-      "/posts/new-test-post/index.html",
+      "/posts/WomenInDataScience/index.html",
       "/posts/new-new-test-post/index.html",
+      "/posts/new-test-post/index.html",
+      "/posts/blog-template/index.html",
       "/posts/example-blog-post/index.html"
     ]
   }
