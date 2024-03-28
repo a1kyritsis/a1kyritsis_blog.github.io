@@ -1,7 +1,7 @@
 ---
 title: "About"
 image: profile.jpg
-about:
+about: Cataloging my machine learning adventures.
   template: jolla
   links:
     - icon: twitter
@@ -15,5 +15,3 @@ about:
       href: https://github.com
 
 ---
-
-Cataloging my machine learning adventures.
