@@ -16,4 +16,4 @@ about:
 
 ---
 
-About this blog
+Cataloging my machine learning adventures.
