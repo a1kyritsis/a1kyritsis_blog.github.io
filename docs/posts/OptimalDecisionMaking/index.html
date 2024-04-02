@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.551">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Alec Kyritsis">
+<meta name="dcterms.date" content="2023-03-31">
+<meta name="description" content="Maximzing bank profit on loan returns using logistic regression and a sampling-determined threshold.">
+
+<title>My Awesome CSCI 0451 Blog - Optimal Decision Making</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+
+      .quarto-title-block .quarto-title-banner h1,
+      .quarto-title-block .quarto-title-banner h2,
+      .quarto-title-block .quarto-title-banner h3,
+      .quarto-title-block .quarto-title-banner h4,
+      .quarto-title-block .quarto-title-banner h5,
+      .quarto-title-block .quarto-title-banner h6
+      {
+        color: white;
+      }
+
+      .quarto-title-block .quarto-title-banner {
+        color: white;
+background-image: url(../../img/landscape.png);
+background-size: cover;
+      }
+</style>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed fullcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">My Awesome CSCI 0451 Blog</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com"> <i class="bi bi-twitter" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+          <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Optimal Decision Making</h1>
+                  <div>
+        <div class="description">
+          Maximzing bank profit on loan returns using logistic regression and a sampling-determined threshold.
+        </div>
+      </div>
+                </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Alec Kyritsis </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">March 31, 2023</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<p><img src="media/approve.jpg" class="img-fluid"></p>
+<section id="optimal-decision-making" class="level1">
+<h1>Optimal Decision Making</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>The primary way through which a bank makes money is a loan. The bank will lend you some sum of money which you then must pay back over duration of the loan period, plus some interest. However, sometimes individuals may not be able to pay back their loan, causing them to default. Choosing who gets a loan is then a pivotal component of the bank’s profitability.</p>
+<p>Today, we will try to automate this process using a scoring function with a minimum threshold. We will design a profit maximizing algorithm, analyze its performance, and investigate its demographic impact.</p>
+</section>
+<section id="data-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="data-analysis">Data Analysis</h2>
+<p>Let’s take a look at the data! First, let’s see what type of people are defaulting on their loans. While there are many features in the dataframe that we might use to extrapolate on demographic information, there are three of interest. First, is loan intent, which is subdevided into Venture, Education, Medical, Home Improvement, Personal, and Debt Consolidation.</p>
+<div>
+
+</div>
+<div id="loan-intent" class="quarto-layout-panel" data-layout-ncol="2">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/intentBreakdownRepai.jpg" class="img-fluid figure-img"></p>
+<figcaption>Repaid</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/intentBreakdownDefaulted.jpg" class="img-fluid figure-img"></p>
+<figcaption>Deafulted</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<p>Loan Intent by Loan Status</p>
+</div>
+</div>
+</div>
+<p>Running a chi square test on the data returns Chi Square Statistic of approximately 368 with confidence approximately 2.1114918454052173e-77. Clearly, whether or not someone defaults on their loans impacts the distriubtion of loan intent. However, a quick look at the charts reveals that the per-cateogry difference is plus/minus a few percents. For our purposes, this does not indicate a clear bias, and we may confirm this in the correlation matrix: Indeed, the correlation between loan status and loan intent is .09. However, this information will be useful when assessing algorithm performance.</p>
+<p>Next, we’ll take a look at loan amount subdevided by defaults. This will be particularly useful when assessing algorithm profitability.</p>
+<p><img src="media/DefaultRepayAmnt.jpg" class="img-fluid"></p>
+<p>A quick glance at the histogram shows that amount seems to have a negligiable impact on defaults. Again, we may confirm this in the correlation matrix: loan amount has a .1 positive correlation with defaults. Finally, let’s look at home ownership. This is subdevided into those with morgages, full home ownership, renters, and an other category.</p>
+<div>
+
+</div>
+<div id="homeownership-loanstatus" class="quarto-layout-panel" data-layout-ncol="2">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/loanPercentHomeownershipGOOD.jpg" class="img-fluid figure-img"></p>
+<figcaption>Low Risk</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/loanPercentHomeownershipBAD.jpg" class="img-fluid figure-img"></p>
+<figcaption>High Risk</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<p>Interestingly, Renters comprise about 73% of individuals who defaulted on their loans but only 44% of those who repay them. We also see that, combined, home owners and inividuals with morgages make up about 26% of individuals who default, but 55% of individuals who repay their loans. We’ll also run a Chi Square Test on this feature, which results in a Chi-square statistic of approximately 1294 with confidence 2.913582391497053e-280! This makes qualitative sense: Individuals that own property are more likely to own assets, and be able to leverage said assets (home, financial, or otherwise) to repay loans. Homeownership also has a positive .22 correlation with loan status.</p>
+</section>
+<section id="feature-selection-and-model-training" class="level2">
+<h2 class="anchored" data-anchor-id="feature-selection-and-model-training">Feature Selection and Model Training</h2>
+<p>There are two clear candiate features to train on the model: Loan Percent of Income and Deafult on File. If one takes out a loan that is a greater percent of yearly, income, it can be hard for them to pay it back along with other expenses. Moreover, if one defaults on their loan for some reason, we can assume that they are likely to do it again in the future. These features have positive correlation with loans status of .38 and .14 respectively.</p>
+<p>From, our initial exploration, we also found that home ownership impacts loan repayment. How does it stack up against the loan’s percent of an individuals income? For convient analysis, call a loan amont that is greater than 50% of one’s income “high risk” and the converse “low risk”. We can then subdevide our dataset into into high risk loans and low risk, and look at the frequnecy of homeownership type in each.</p>
+<div>
+
+</div>
+<div id="homeownership-loanstatus" class="quarto-layout-panel" data-layout-ncol="2">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/homeOwnershipBreakdownRepaid.jpg" class="img-fluid figure-img"></p>
+<figcaption>Repaid</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/homeOwnershipBreakdownDeafulted.jpg" class="img-fluid figure-img"></p>
+<figcaption>Deafulted</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<p>Homeownership Breakdown For Repaid and Defaulted Loans</p>
+</div>
+</div>
+</div>
+<p>loanPercentHomeownershipBAD.jpg</p>
+<p>We see that renters make up a larger portion of high risk loans. This observation lends some insight to our initial finding: Perhaps renters may also be more likely to default on their loans since they are more likely to take out loans that are a higher percent of their income.</p>
+<p>For our model, we use logistic regression, and we’ll train on the features discussed (.e.g Loan Percent Income, Default on File, and Homeownership Type). This yields on accuracy of 84% on the testing data–well within industry standards and acceptable for a simple regression model.</p>
+</section>
+<section id="profit-optmization" class="level2">
+<h2 class="anchored" data-anchor-id="profit-optmization">Profit Optmization</h2>
+<p>This is where the fun begins. First, let’s define a simple profit model for the bank. If an individual is able to repay their loan, let’s assume they did so over a 10 year period. On the other hand, if an individual defaults on their loan, we’ll assume that this occured after a 3 year period. We’ll also assume that the bank’s operating cost is 75% of the loan profit, to add some spice to our data (we don’t want to make things too easy). This leads to the following equations:</p>
+<p><span class="math display">\[ REPAID = PRINCIPLE \cdot (1 + INTEREST)^{10} - PRINCIPLE \]</span> <span class="math display">\[DEFAULTED = PRINCIPLE \cdot (1 + INTEREST)^3 - PRINCIPLE\]</span></p>
+<p>We’ll use these equations to create a profit and loss column – denoted PnL –in both our training and testing data. We can do this as follows:</p>
+<div id="cell-2" class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>    creditTest[<span class="st">"loan_amnt"</span>] <span class="op">*</span> (<span class="dv">1</span> <span class="op">+</span>  percentProfit <span class="op">*</span> <span class="fl">.01</span> <span class="op">*</span> creditTest[<span class="st">"loan_int_rate"</span>])<span class="op">**</span><span class="dv">10</span> <span class="op">-</span> creditTest[<span class="st">"loan_amnt"</span>] (REPAID)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    creditTest[<span class="st">"loan_amnt"</span>]<span class="op">*</span> (<span class="dv">1</span> <span class="op">+</span>  percentProfit <span class="op">*</span> <span class="fl">.01</span> <span class="op">*</span> creditTest[<span class="st">"loan_int_rate"</span>])<span class="op">**</span><span class="dv">3</span> <span class="op">-</span> <span class="fl">1.7</span> <span class="op">*</span> creditTest[<span class="st">"loan_amnt"</span>] (DEFAULT)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Next, we’ll define a theoretical portfolio of loans to benchmark our algorithm’s performance. We do this by adding a loan to our portfolio in the testing set if and only if the PnL is positive. The sum of these loans is the maximum possible profit the bank can make. We can find this as follows:</p>
+<div id="cell-4" class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>    theoreticalPNL <span class="op">=</span> creditTest.loc[creditTest[<span class="st">'PnL'</span>] <span class="op">&gt;</span> <span class="dv">0</span>, <span class="st">'PnL'</span>].<span class="bu">sum</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now we need to find our threshold. Rather than use the actual weights from the model, a more elegant solution is to simply look at the probability score the regression assigns to each entry. We can add this column to both the training and test set:</p>
+<div id="cell-6" class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>    credit[<span class="st">"probability_score"</span>] <span class="op">=</span> LR.predict_proba(credit[interestingFeatures])[:, <span class="dv">1</span>]</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    creditTest[<span class="st">"probability_score"</span>] <span class="op">=</span> LR.predict_proba(creditTest[interestingFeatures])[:, <span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>With the stage set, we can now design a tresholding algorithm. Ideally, we would like to transform this to a a calc I optmization problem where we have have profit <span class="math inline">\(P\)</span> as a function of the treshold <span class="math inline">\(T\)</span>. To do this, we’ll discretize <span class="math inline">\(T\)</span>’s domain by some constant <span class="math inline">\(\Delta\)</span>. For each <span class="math inline">\(T\)</span> value, we lend money if and only if the probability score is less than the treshold. We’ll the calculate PnL for the loans made, and record it as a function of <span class="math inline">\(T\)</span>.</p>
+<p>There are two problems with with this approach. First, is time complexity. If <span class="math inline">\(D\)</span> is the length of the data frame and <span class="math inline">\(\Delta\)</span> the descritizeation constant, this algorithm runs in <span class="math inline">\(O(D \cdot \Delta)\)</span>. While I can run this code on my 2016 macbook in under minutes, for larger datasets with more complex calcuations, this is bad practice. A more pressing issue is overfitting. By taking the optima of a single sample (e.g.&nbsp;the training data), we may maximize for the sample but not for potential data in the population (e.g.&nbsp;the trianing set).</p>
+<p>To remedy these issues, we’ll take <span class="math inline">\(n\)</span> sample of size <span class="math inline">\(k\)</span>, for each of which we will record the <span class="math inline">\(T\)</span> value the maximizes profit. We then define a new statistic, call it <span class="math inline">\(T^*\)</span>, which is the mean of the sample maxizes (Thanks central limit theorem!). Notice that <span class="math inline">\(n \cdot k &lt; D \Longrightarrow n \cdot k \cdot \Delta &lt; D \cdot \Delta\)</span>, we can theoretically accomplish this more quickly then the aforementioned method. This method is also quite emperically accurate at treshold determination for <span class="math inline">\(n,k\)</span> small. This is acomplished with the following functions:</p>
+<div id="cell-8" class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> sampleMaxProfit(credit, n, k, scoreRange):</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">#samples size n from df credit.</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="co">#tests tresholds across </span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    T <span class="op">=</span> scoreRange[<span class="dv">0</span>]</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    maxTuple <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">0</span>]</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    sample <span class="op">=</span> credit.sample(n)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    delta_T <span class="op">=</span> (<span class="bu">abs</span>(scoreRange[<span class="dv">1</span>] <span class="op">-</span> scoreRange[<span class="dv">0</span>]))<span class="op">/</span>k</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> T <span class="op">&lt;</span> scoreRange[<span class="dv">1</span>]: <span class="co">#can we do this without a loop?</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        PnL <span class="op">=</span> sample.loc[sample[<span class="st">'probability_score'</span>] <span class="op">&lt;=</span> T, <span class="st">'PnL'</span>].<span class="bu">sum</span>()</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (PnL <span class="op">&gt;</span> maxTuple[<span class="dv">0</span>]):</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>            maxTuple <span class="op">=</span> [PnL, T]</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        T <span class="op">+=</span> delta_T</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> maxTuple[<span class="dv">1</span>] </span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> optimalProfitScore(credit, iterations, n, k):</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Finds treshold score T that optmizes profit</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    testResult <span class="op">=</span> []</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    scoreRange <span class="op">=</span> [credit[<span class="st">"probability_score"</span>].<span class="bu">min</span>(), credit[<span class="st">"probability_score"</span>].<span class="bu">max</span>()]</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, iterations):</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>        testResult.append(sampleMaxProfit(credit, n, k, scoreRange))</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    npTestResult <span class="op">=</span> np.array(testResult)</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.mean(npTestResult)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Which produces the following result:</p>
+<!-- <div style="display:flex; justify-content:center;">
+    <img src= "media/bias.jpg" style="width:75%;">
+</div> -->
+<p><img src="media/bias.jpg" class="img-fluid"></p>
+<p>Notice that our method (in orange) under estimates the optimal treshold value. This is because there is bias associated with our estimator. We can remedy this by multiplyiing by a proportionality constant. This works out to be about <span class="math inline">\(1.05\)</span>. The resulting curves look better for both the training and testing set:</p>
+<div>
+
+</div>
+<div id="thresholding" class="quarto-layout-panel" data-layout-ncol="2">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/tresholdVPnLTrain.jpg" class="img-fluid figure-img"></p>
+<figcaption>Training Set</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/tresholdVPnLTest.jpg" class="img-fluid figure-img"></p>
+<figcaption>Test Set</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<p>Profit Curves.</p>
+</div>
+</div>
+</div>
+<p>The threshold value that maximize profit is 0.455 for both the training (right) and testing (left) set. Running the algorithm with 200 trials with sample size of 100 – which is less than the length of the data set at 22,000 – we recieve a treshold of 0.445.</p>
+</section>
+<section id="evaluation---bank" class="level2">
+<h2 class="anchored" data-anchor-id="evaluation---bank">Evaluation - Bank</h2>
+<p>Time to put our top hats on. We’ll start by comparing the results of the algorithm against the theoretical loan portfolio. Our model has an accuracy of around 84%. The theoretical PnL is $12634399.24, the Model PnL is $7476722.014, and the Tresholded PnL is $7850920.35. Here Model PnL is the profit and loss if we use the model’s threshold. The Tresholded PnL is the profit and loss if we use our treshold. Using the tresholded PnL produces a 5% increase in profitability. However, both predictive methods capture just north of 60% of potential profits. While profit and is not a linear function of accuracy, if we assigned loan amounts reflecteive of the population to the 80% of the data we predicted correctly, we might expect it to be closer to 80% of thoeretical profits. This obseration suggests two, not-necessarily-mutually-exclusive possibilities. First, the algorithm is not giving loans to to high value loans. This would mean that we are leaving gainz on the table. Second, the algorithm is giving high value loans to people who are defaulting, which would puts a downward pressure on profit. Let’s investigate.</p>
+<p>First, we’ll partition the data set into individuals selected for a laon and individuals whose loan request is rejected. Call these categories Algorithm-Select and Algorithm-Reject repsectively. First, we consider defaults.</p>
+<div>
+
+</div>
+<div id="algorithmProfitRepaid" class="quarto-layout-panel" data-layout-ncol="2">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/loanProfitAlgoSelectDefault.jpg" class="img-fluid figure-img"></p>
+<figcaption>Selection Default Loss</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/loanProfitAlgoRejectDefault.jpg" class="img-fluid figure-img"></p>
+<figcaption>Reject Default Loss</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<p>Loan Defaults for Alorithm Selections and Rejections</p>
+</div>
+</div>
+</div>
+<p>Of those individuals who defaulted on their loans, the average loss for Algorithm-Select is $-5179. For the same default population, the average loss for Algorithm-Reject is $-8795. We also see that the loss histogram left-skewed for the Algorithm-Select, whereas it is centered farther form 0 for Algorithm-Reject. This suggests that the algorithm, on average, the Algorithm is doing a good job of not loosing money via defaults.</p>
+<p>We now consider repayments.</p>
+<div>
+
+</div>
+<div id="algorithmProfitDefault" class="quarto-layout-panel" data-layout-ncol="2">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/LoanProfitAlgorithmSelectRepaid.jpg" class="img-fluid figure-img"></p>
+<figcaption>Selection Repayment Prfoit</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/loanProfitAlgoRejectRepaid.jpg" class="img-fluid figure-img"></p>
+<figcaption>Rejection Repayment Profit</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<p>Loan Repayments for Alorithm Selections and Rejections</p>
+</div>
+</div>
+</div>
+<p>Again, of those individuals who reapid their loans, the average profit for Algorithm-Select is $2713. However the average profit in the Algorithm-Reject group is 5780. We see that the histogram for the Algorith-Select group is right skewed, whereas the histogram for Algorithm-Reject has a mound in $4000 - $6000 dollar range. The algorithm is not extending loans to potentially profitable individuals. Recall that one of the features we trained the model on was loan_percent income. While this was a good predictor of loan defaults, it (unsuprislingly) also has a positive correlation with loan amount for both default and repay groups.</p>
+<p><img src="media/amntVsIntent.jpg" class="img-fluid"></p>
+<p>This can make it difficult for our algorithm to correctly appraise high value loans leading to unrealized gains. Notice that for our given feature selection, we did maximize for profit. However, this was only for a single set of features. In that sense, this is question of model accuracy rather than optmization. Given the overlapping nature of the features in the data set, it is unlikely that this is case. Considering our algorithm is profitable, I would say that it recieves a satisfactory grade from the bank.</p>
+</section>
+<section id="evaluation---demographic-impact" class="level2">
+<h2 class="anchored" data-anchor-id="evaluation---demographic-impact">Evaluation - Demographic Impact</h2>
+<p>We’ll now investigate the impact the model has on potential borrowers. We’ll use the same features we discussed at the beggining. First, lets look at loan intent breakdown.</p>
+<div>
+
+</div>
+<div id="selectRejectIntent" class="quarto-layout-panel" data-layout-ncol="2">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/loanIntentBreakDownAlgoSelect.jpg" class="img-fluid figure-img"></p>
+<figcaption>Selection Intent Breakdown</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/loanIntentBreakDownAlgoReject.jpg" class="img-fluid figure-img"></p>
+<figcaption>Rejection Intent Breakdown</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<p>Loan Intent Breakdown for Algorithm Selections and Rejections.</p>
+</div>
+</div>
+</div>
+<p>Again, we see that their certainly is a change in the distriubtion. However, these changes are relatively minimal, which does not suggest that the algorithm is bias against loan intent. Looking at homeownership, we see that this tells a different story.</p>
+<div>
+
+</div>
+<div id="selectRejectIntent" class="quarto-layout-panel" data-layout-ncol="2">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/homeOwnershipBreakdownAlgoSelect.jpg" class="img-fluid figure-img"></p>
+<figcaption>Selection Ownership Types</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/homeOwnershipBreakdownAlgoReject.jpg" class="img-fluid figure-img"></p>
+<figcaption>Rejection Ownership Types</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<p>Homeownership Type for Algorithm Selections and Rejections</p>
+</div>
+</div>
+</div>
+<p>We see that renters compose of 45.8% of Individuals seleclted for a loan, but 84.9% of individuals whose loan application was rejected. Individuals with morgages or who own homes make up about half of all loan selections, and around 14% of all loan rejections. If we make the same chart on the testing data, but instead look at historic defaults and repayments, we see that renters make up about 73% of individuals who default on their loans. Homeowners and invividuals with morgages make up about a quarter of loan defaults. Clearly, the algorithm we designed has made it harder for renters to get loans, thereby exascerbating existing inequality.</p>
+<p>Moreover, looking at the loan percent income by selection type used in the anlaysis for the bank, we see that our algorithm tends to select Individuals where loans are a lower portion of income. Commodities like healthcare and education tend to have a fixed, absolute cost regardless of economic background. Hence, this can make it harder for less afluent individuals to achieve wellbeing and economic advancement. This is confirmed looking at the mean income which is $70074 and $42644 for select and rejection groups respectively. Perhaps even more paradoxically, if homeownership / mortgage is a critical component in recieving a loan, how can we expect renters to own homes if they cannot recieve a loan to buy one in the first place?</p>
+<p>Given this information, we might think that profitability is at odds with social responsibility (i.e.&nbsp;equality in loan extension). The synthesis here is notice that the bank left some profit on the table–some of which could be gained by lending to a more diverse group with respect to ownership type. Perhaps we need more features that partition the dataset, or a better model through which the data can be trained on. Or perhaps we should not be doing machine learning here at all. Maybe numbers will never represent abstract notions of trustworthiness and interpersonal relations. A question for another time (or blog post?).</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
