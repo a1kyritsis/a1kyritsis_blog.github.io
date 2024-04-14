@@ -2,8 +2,8 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/logisticRegression/notebook.html",
       "/posts/WomenInDataScience/index.html",
-      "/posts/new-new-test-post/index.html",
       "/posts/palmerPenguins/index.html",
       "/posts/OptimalDecisionMaking/index.html",
       "/posts/new-test-post/index.html",
