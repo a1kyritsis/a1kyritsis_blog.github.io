@@ -243,12 +243,12 @@ window.Quarto = {
 <h1>Optimal Decision Making</h1>
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p>The primary way through which a bank makes money is a loan. The bank will lend you some sum of money which you then must pay back over duration of the loan period, plus some interest. However, sometimes individuals may not be able to pay back their loan, causing them to default. Choosing who gets a loan is then a pivotal component of the bank’s profitability.</p>
-<p>Today, we will try to automate this process using a scoring function with a minimum threshold. We will design a profit maximizing algorithm, analyze its performance, and investigate its demographic impact.</p>
+<p>The primary way through which a bank makes money is a loan. The bank will lend you some sum of money which you then must pay back over the duration of the loan period, plus some interest. However, sometimes individuals may not be able to pay back their loan, causing them to default. Choosing who gets a loan is then a pivotal component of a bank’s profitability.</p>
+<p>Today, we will try to automate this process using a scoring function with a minimum threshold. We will design a profit maximizing algorithm using a sampling based approach, analyze its performance, and investigate its demographic impact. Although our model is profitable, ultimately we find that thresholded linear scoring methods can struggle to attain a high degree of accuracy, and hence profitability. We also find that input features to the model can result in a vicious cycle of discrimination.</p>
 </section>
 <section id="data-analysis" class="level2">
 <h2 class="anchored" data-anchor-id="data-analysis">Data Analysis</h2>
-<p>Let’s take a look at the data! First, let’s see what type of people are defaulting on their loans. While there are many features in the dataframe that we might use to extrapolate on demographic information, there are three of interest. First, is loan intent, which is subdevided into Venture, Education, Medical, Home Improvement, Personal, and Debt Consolidation.</p>
+<p>We begin by taking a look at the data. First, let’s see what type of people are defaulting on their loans. While there are many features in the data frame that we might use to extrapolate on demographic information, there are three of interest. First, is loan intent, which is subdivided into Venture, Education, Medical, Home Improvement, Personal, and Debt Consolidation.</p>
 <div>
 
 </div>
@@ -257,7 +257,7 @@ window.Quarto = {
 <div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="media/intentBreakdownRepai.jpg" class="img-fluid figure-img"></p>
+<p><img src="media/IntentBreakDownRepaidLoans-SORTED.jpg" class="img-fluid figure-img"></p>
 <figcaption>Repaid</figcaption>
 </figure>
 </div>
@@ -265,7 +265,7 @@ window.Quarto = {
 <div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="media/intentBreakdownDefaulted.jpg" class="img-fluid figure-img"></p>
+<p><img src="media/IntentBreakDownDefaultedLoans-SORTED.jpg" class="img-fluid figure-img"></p>
 <figcaption>Deafulted</figcaption>
 </figure>
 </div>
@@ -277,10 +277,39 @@ window.Quarto = {
 </div>
 </div>
 </div>
-<p>Running a chi square test on the data returns Chi Square Statistic of approximately 368 with confidence approximately 2.1114918454052173e-77. Clearly, whether or not someone defaults on their loans impacts the distriubtion of loan intent. However, a quick look at the charts reveals that the per-cateogry difference is plus/minus a few percents. For our purposes, this does not indicate a clear bias, and we may confirm this in the correlation matrix: Indeed, the correlation between loan status and loan intent is .09. However, this information will be useful when assessing algorithm performance.</p>
-<p>Next, we’ll take a look at loan amount subdevided by defaults. This will be particularly useful when assessing algorithm profitability.</p>
+<p>Running a chi square test on the data returns Chi Square Statistic of approximately 368 with confidence value approaching 0. Clearly, whether or not someone defaults on their loans impacts the distribution of loan intent. However, a quick look at the charts reveals that the per-category difference is plus/minus a few percent. For our purposes, this does not indicate a clear bias, and we may confirm this in the correlation matrix: Indeed, the correlation between loan status and loan intent is .09. However, this information will be useful when assessing algorithm performance.</p>
+<p>Next, we’ll take a look at loan amount subdivided by defaults. This will be particularly useful when assessing algorithm profitability.</p>
 <p><img src="media/DefaultRepayAmnt.jpg" class="img-fluid"></p>
-<p>A quick glance at the histogram shows that amount seems to have a negligiable impact on defaults. Again, we may confirm this in the correlation matrix: loan amount has a .1 positive correlation with defaults. Finally, let’s look at home ownership. This is subdevided into those with morgages, full home ownership, renters, and an other category.</p>
+<p>A quick glance at the histogram shows that amount seems to have a negligible impact on defaults. Again, we may confirm this in the correlation matrix: loan amount has a .1 positive correlation with defaults. Finally, let’s look at home ownership. This is subdivided into those with mortgages, full home ownership, renters, and another category.</p>
+<div>
+
+</div>
+<div id="homeownership-loanstatus" class="quarto-layout-panel" data-layout-ncol="2">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/HomeOwnershipRepaidLoans-SORTED.jpg" class="img-fluid figure-img"></p>
+<figcaption>Repaid</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="media/HomeOwnershipDefaultedLoans-SORTED.jpg" class="img-fluid figure-img"></p>
+<figcaption>Deafulted</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<p>Interestingly, Renters comprise about 73% of individuals who defaulted on their loans but only 44% of those who repay them. We also see that, combined, home owners and individuals with mortgages make up about 26% of individuals who default, but 55% of individuals who repay their loans. We’ll also run a Chi Square Test on this feature, which results in a Chi-square statistic of approximately 1294 with confidence 2.913582391497053e-280! This makes qualitative sense: Individuals that own property are more likely to own assets, and be able to leverage said assets (home, financial, or otherwise) to repay loans. Homeownership also has a positive .22 correlation with loan status.</p>
+</section>
+<section id="feature-selection-and-model-training" class="level2">
+<h2 class="anchored" data-anchor-id="feature-selection-and-model-training">Feature Selection and Model Training</h2>
+<p>There are two clear candidate features to train on the model: Loan Percent of Income and Default on File. If one takes out a loan that is a greater percent of yearly income, it can be hard for them to pay it back along with other expenses. Moreover, if one defaults on their loan for some reason, we can assume that they are likely to do it again in the future. These features have positive correlation with loan status of .38 and .14 respectively.</p>
+<p>From our initial exploration, we also found that home ownership impacts loan repayment. How does it stack up against the loan’s percent of an individual’s income? For convenience analysis, call a loan amount that is greater than 50% of one’s income “high risk” and the converse “low risk”. We can then subdivide our dataset into high risk loans and low risk, and look at the frequency of homeownership type in each.</p>
 <div>
 
 </div>
@@ -303,55 +332,25 @@ window.Quarto = {
 </div>
 </div>
 </div>
-</div>
-<p>Interestingly, Renters comprise about 73% of individuals who defaulted on their loans but only 44% of those who repay them. We also see that, combined, home owners and inividuals with morgages make up about 26% of individuals who default, but 55% of individuals who repay their loans. We’ll also run a Chi Square Test on this feature, which results in a Chi-square statistic of approximately 1294 with confidence 2.913582391497053e-280! This makes qualitative sense: Individuals that own property are more likely to own assets, and be able to leverage said assets (home, financial, or otherwise) to repay loans. Homeownership also has a positive .22 correlation with loan status.</p>
-</section>
-<section id="feature-selection-and-model-training" class="level2">
-<h2 class="anchored" data-anchor-id="feature-selection-and-model-training">Feature Selection and Model Training</h2>
-<p>There are two clear candiate features to train on the model: Loan Percent of Income and Deafult on File. If one takes out a loan that is a greater percent of yearly, income, it can be hard for them to pay it back along with other expenses. Moreover, if one defaults on their loan for some reason, we can assume that they are likely to do it again in the future. These features have positive correlation with loans status of .38 and .14 respectively.</p>
-<p>From, our initial exploration, we also found that home ownership impacts loan repayment. How does it stack up against the loan’s percent of an individuals income? For convient analysis, call a loan amont that is greater than 50% of one’s income “high risk” and the converse “low risk”. We can then subdevide our dataset into into high risk loans and low risk, and look at the frequnecy of homeownership type in each.</p>
-<div>
-
-</div>
-<div id="homeownership-loanstatus" class="quarto-layout-panel" data-layout-ncol="2">
-<div class="quarto-layout-row">
-<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="media/homeOwnershipBreakdownRepaid.jpg" class="img-fluid figure-img"></p>
-<figcaption>Repaid</figcaption>
-</figure>
-</div>
-</div>
-<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="media/homeOwnershipBreakdownDeafulted.jpg" class="img-fluid figure-img"></p>
-<figcaption>Deafulted</figcaption>
-</figure>
-</div>
-</div>
-</div>
 <div class="quarto-layout-row">
 <div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
 <p>Homeownership Breakdown For Repaid and Defaulted Loans</p>
 </div>
 </div>
 </div>
-<p>loanPercentHomeownershipBAD.jpg</p>
 <p>We see that renters make up a larger portion of high risk loans. This observation lends some insight to our initial finding: Perhaps renters may also be more likely to default on their loans since they are more likely to take out loans that are a higher percent of their income.</p>
-<p>For our model, we use logistic regression, and we’ll train on the features discussed (.e.g Loan Percent Income, Default on File, and Homeownership Type). This yields on accuracy of 84% on the testing data–well within industry standards and acceptable for a simple regression model.</p>
+<p>For our model, we use logistic regression, and we’ll train on the features discussed (.e.g Loan Percent Income, Default on File, and Homeownership Type). This yields an accuracy of 84% on the testing data–well within industry standards and acceptable for a simple regression model.</p>
 </section>
 <section id="profit-optmization" class="level2">
 <h2 class="anchored" data-anchor-id="profit-optmization">Profit Optmization</h2>
-<p>This is where the fun begins. First, let’s define a simple profit model for the bank. If an individual is able to repay their loan, let’s assume they did so over a 10 year period. On the other hand, if an individual defaults on their loan, we’ll assume that this occured after a 3 year period. We’ll also assume that the bank’s operating cost is 75% of the loan profit, to add some spice to our data (we don’t want to make things too easy). This leads to the following equations:</p>
-<p><span class="math display">\[ REPAID = PRINCIPLE \cdot (1 + INTEREST)^{10} - PRINCIPLE \]</span> <span class="math display">\[DEFAULTED = PRINCIPLE \cdot (1 + INTEREST)^3 - PRINCIPLE\]</span></p>
+<p>This is where the fun begins. First, let’s define a simple profit model for the bank. If an individual is able to repay their loan, let’s assume they did so over a 10 year period. On the other hand, if an individual defaults on their loan, we’ll assume that this occurred after a 3 year period. We’ll also assume that the bank’s operating cost is 75% of the loan profit, to add some spice to our data (we don’t want to make things too easy). This leads to the following equations. Let <span class="math inline">\(R\)</span> be the value of a repaid loan, <span class="math inline">\(D\)</span> the value of a defaulted loan, <span class="math inline">\(P\)</span> the principle, and <span class="math inline">\(I\)</span> the decimal interest rate. Then we have</p>
+<p><span class="math display">\[ R = P \cdot (1 + I)^{10} - P \]</span> <span class="math display">\[D = P \cdot (1 + I)^3 - P\]</span></p>
 <p>We’ll use these equations to create a profit and loss column – denoted PnL –in both our training and testing data. We can do this as follows:</p>
 <div id="cell-2" class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>    creditTest[<span class="st">"loan_amnt"</span>] <span class="op">*</span> (<span class="dv">1</span> <span class="op">+</span>  percentProfit <span class="op">*</span> <span class="fl">.01</span> <span class="op">*</span> creditTest[<span class="st">"loan_int_rate"</span>])<span class="op">**</span><span class="dv">10</span> <span class="op">-</span> creditTest[<span class="st">"loan_amnt"</span>] (REPAID)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    creditTest[<span class="st">"loan_amnt"</span>]<span class="op">*</span> (<span class="dv">1</span> <span class="op">+</span>  percentProfit <span class="op">*</span> <span class="fl">.01</span> <span class="op">*</span> creditTest[<span class="st">"loan_int_rate"</span>])<span class="op">**</span><span class="dv">3</span> <span class="op">-</span> <span class="fl">1.7</span> <span class="op">*</span> creditTest[<span class="st">"loan_amnt"</span>] (DEFAULT)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>Next, we’ll define a theoretical portfolio of loans to benchmark our algorithm’s performance. We do this by adding a loan to our portfolio in the testing set if and only if the PnL is positive. The sum of these loans is the maximum possible profit the bank can make. We can find this as follows:</p>
+<p>Next, we’ll define a theoretical portfolio of loans to benchmark our algorithm’s performance. We do this by adding a loan to our portfolio in the testing set if and only if the Profit and Loss is positive. The sum of these loans is the maximum possible profit the bank can make. We can find this as follows:</p>
 <div id="cell-4" class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>    theoreticalPNL <span class="op">=</span> creditTest.loc[creditTest[<span class="st">'PnL'</span>] <span class="op">&gt;</span> <span class="dv">0</span>, <span class="st">'PnL'</span>].<span class="bu">sum</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
@@ -360,9 +359,9 @@ window.Quarto = {
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>    credit[<span class="st">"probability_score"</span>] <span class="op">=</span> LR.predict_proba(credit[interestingFeatures])[:, <span class="dv">1</span>]</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    creditTest[<span class="st">"probability_score"</span>] <span class="op">=</span> LR.predict_proba(creditTest[interestingFeatures])[:, <span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>With the stage set, we can now design a tresholding algorithm. Ideally, we would like to transform this to a a calc I optmization problem where we have have profit <span class="math inline">\(P\)</span> as a function of the treshold <span class="math inline">\(T\)</span>. To do this, we’ll discretize <span class="math inline">\(T\)</span>’s domain by some constant <span class="math inline">\(\Delta\)</span>. For each <span class="math inline">\(T\)</span> value, we lend money if and only if the probability score is less than the treshold. We’ll the calculate PnL for the loans made, and record it as a function of <span class="math inline">\(T\)</span>.</p>
-<p>There are two problems with with this approach. First, is time complexity. If <span class="math inline">\(D\)</span> is the length of the data frame and <span class="math inline">\(\Delta\)</span> the descritizeation constant, this algorithm runs in <span class="math inline">\(O(D \cdot \Delta)\)</span>. While I can run this code on my 2016 macbook in under minutes, for larger datasets with more complex calcuations, this is bad practice. A more pressing issue is overfitting. By taking the optima of a single sample (e.g.&nbsp;the training data), we may maximize for the sample but not for potential data in the population (e.g.&nbsp;the trianing set).</p>
-<p>To remedy these issues, we’ll take <span class="math inline">\(n\)</span> sample of size <span class="math inline">\(k\)</span>, for each of which we will record the <span class="math inline">\(T\)</span> value the maximizes profit. We then define a new statistic, call it <span class="math inline">\(T^*\)</span>, which is the mean of the sample maxizes (Thanks central limit theorem!). Notice that <span class="math inline">\(n \cdot k &lt; D \Longrightarrow n \cdot k \cdot \Delta &lt; D \cdot \Delta\)</span>, we can theoretically accomplish this more quickly then the aforementioned method. This method is also quite emperically accurate at treshold determination for <span class="math inline">\(n,k\)</span> small. This is acomplished with the following functions:</p>
+<p>With the stage set, we can now design a thresholding algorithm. Ideally, we would like to transform this to a a calc I optimization problem where we have profit <span class="math inline">\(P\)</span> as a function of the threshold <span class="math inline">\(T\)</span>. To do this, we’ll discretize <span class="math inline">\(T\)</span>’s domain by some constant <span class="math inline">\(\Delta\)</span>. For each <span class="math inline">\(T\)</span> value, we lend money if and only if the probability score is less than the threshold. We’ll calculate PnL for the loans made, and record it as a function of <span class="math inline">\(T\)</span>.</p>
+<p>There are two problems with this approach. First, is time complexity. If <span class="math inline">\(D\)</span> is the length of the data frame and <span class="math inline">\(\Delta\)</span> the discretization constant, This algorithm runs in <span class="math inline">\(O(D \cdot \Delta)\)</span>. While I can run this code on my 2016 macbook in under minutes, for larger datasets with more complex calculations, This is bad practice. A more pressing issue is overfitting. By taking the optima of a single sample (e.g.&nbsp;the training data), we may maximize for the sample but not for potential data in the population (e.g.&nbsp;the training set).</p>
+<p>To remedy these issues, we’ll take <span class="math inline">\(n\)</span> sample of size <span class="math inline">\(k\)</span>, for each of which we will record the <span class="math inline">\(T\)</span> value that maximizes profit. We then define a new statistic, call it <span class="math inline">\(T^*\)</span>, which is the mean of the sample maximizes (Thanks central limit theorem!). Notice that <span class="math inline">\(n \cdot k &lt; D \Longrightarrow n \cdot k \cdot \Delta &lt; D \cdot \Delta\)</span>, we can theoretically accomplish this more quickly then the aforementioned method. This method is also quite empirically accurate at threshold determination for <span class="math inline">\(n,k\)</span> small. This is accomplished with the following functions:</p>
 <div id="cell-8" class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> sampleMaxProfit(credit, n, k, scoreRange):</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">#samples size n from df credit.</span></span>
@@ -392,7 +391,7 @@ window.Quarto = {
     <img src= "media/bias.jpg" style="width:75%;">
 </div> -->
 <p><img src="media/bias.jpg" class="img-fluid"></p>
-<p>Notice that our method (in orange) under estimates the optimal treshold value. This is because there is bias associated with our estimator. We can remedy this by multiplyiing by a proportionality constant. This works out to be about <span class="math inline">\(1.05\)</span>. The resulting curves look better for both the training and testing set:</p>
+<p>Notice that our method (in orange) under estimates the optimal threshold value. This is because there is bias associated with our estimator. We can remedy this by multiplying by a proportionality constant. This works out to be about <span class="math inline">\(1.05\)</span>. The resulting curves look better for both the training and testing set:</p>
 <div>
 
 </div>
@@ -421,12 +420,12 @@ window.Quarto = {
 </div>
 </div>
 </div>
-<p>The threshold value that maximize profit is 0.455 for both the training (right) and testing (left) set. Running the algorithm with 200 trials with sample size of 100 – which is less than the length of the data set at 22,000 – we recieve a treshold of 0.445.</p>
+<p>The threshold value that maximizes profit is 0.455 for both the training (right) and testing (left) set. Running the algorithm with 200 trials with sample size of 100 – which is less than the length of the data set at 22,000 – we receive a threshold of 0.445.</p>
 </section>
 <section id="evaluation---bank" class="level2">
 <h2 class="anchored" data-anchor-id="evaluation---bank">Evaluation - Bank</h2>
-<p>Time to put our top hats on. We’ll start by comparing the results of the algorithm against the theoretical loan portfolio. Our model has an accuracy of around 84%. The theoretical PnL is $12634399.24, the Model PnL is $7476722.014, and the Tresholded PnL is $7850920.35. Here Model PnL is the profit and loss if we use the model’s threshold. The Tresholded PnL is the profit and loss if we use our treshold. Using the tresholded PnL produces a 5% increase in profitability. However, both predictive methods capture just north of 60% of potential profits. While profit and is not a linear function of accuracy, if we assigned loan amounts reflecteive of the population to the 80% of the data we predicted correctly, we might expect it to be closer to 80% of thoeretical profits. This obseration suggests two, not-necessarily-mutually-exclusive possibilities. First, the algorithm is not giving loans to to high value loans. This would mean that we are leaving gainz on the table. Second, the algorithm is giving high value loans to people who are defaulting, which would puts a downward pressure on profit. Let’s investigate.</p>
-<p>First, we’ll partition the data set into individuals selected for a laon and individuals whose loan request is rejected. Call these categories Algorithm-Select and Algorithm-Reject repsectively. First, we consider defaults.</p>
+<p>Time to put our top hats on. We’ll start by comparing the results of the algorithm against the theoretical loan portfolio. Our model has an accuracy of around 84%. The theoretical PnL is $12634399.24, the Model PnL is $7476722.014, and the Thresholded PnL is $7850920.35. Here Model PnL is the profit and loss if we use the model’s threshold. The Thresholded PnL is the profit and loss if we use our threshold. Using the thresholded PnL produces a 5% increase in profitability. However, both predictive methods capture just north of 60% of potential profits. While profit is not a linear function of accuracy, if we assigned loan amounts reflective of the population to the 80% of the data we predicted correctly, we might expect it to be closer to 80% of theoretical profits. This observation suggests two, not-necessarily-mutually-exclusive possibilities. First, the algorithm is not giving loans to high value loans. This would mean that we are leaving gainz on the table. Second, the algorithm is giving high value loans to people who are defaulting, which would put a downward pressure on profit. Let’s investigate.</p>
+<p>First, we’ll partition the data set into individuals selected for a loan and individuals whose loan request is rejected. Call these categories Algorithm-Select and Algorithm-Reject respectively. First, we consider defaults.</p>
 <div>
 
 </div>
@@ -455,7 +454,7 @@ window.Quarto = {
 </div>
 </div>
 </div>
-<p>Of those individuals who defaulted on their loans, the average loss for Algorithm-Select is $-5179. For the same default population, the average loss for Algorithm-Reject is $-8795. We also see that the loss histogram left-skewed for the Algorithm-Select, whereas it is centered farther form 0 for Algorithm-Reject. This suggests that the algorithm, on average, the Algorithm is doing a good job of not loosing money via defaults.</p>
+<p>Of those individuals who defaulted on their loans, the average loss for Algorithm-Select is $-5179. For the same default population, The average loss for Algorithm-Reject is $-8795. We also see that the loss histogram left-skewed for the Algorithm-Select, whereas it is centered farther form 0 for Algorithm-Reject. This suggests that the algorithm, on average, the Algorithm is doing a good job of not losing money via defaults.</p>
 <p>We now consider repayments.</p>
 <div>
 
@@ -485,13 +484,17 @@ window.Quarto = {
 </div>
 </div>
 </div>
-<p>Again, of those individuals who reapid their loans, the average profit for Algorithm-Select is $2713. However the average profit in the Algorithm-Reject group is 5780. We see that the histogram for the Algorith-Select group is right skewed, whereas the histogram for Algorithm-Reject has a mound in $4000 - $6000 dollar range. The algorithm is not extending loans to potentially profitable individuals. Recall that one of the features we trained the model on was loan_percent income. While this was a good predictor of loan defaults, it (unsuprislingly) also has a positive correlation with loan amount for both default and repay groups.</p>
+<p>Again, of those individuals who repaid their loans, the average profit for Algorithm-Select is $2713. However the average profit in the Algorithm-Reject group is 5780. We see that the histogram for the Algorithm-Select group is right skewed, whereas the histogram for Algorithm-Reject has a mound in $4000 - $6000 dollar range. The algorithm is not extending loans to potentially profitable individuals. Recall that one of the features we trained the model on was loan_percent income. While this was a good predictor of loan defaults, it (unsurprisingly) also has a positive correlation with loan amount for both default and repay groups:</p>
 <p><img src="media/amntVsIntent.jpg" class="img-fluid"></p>
-<p>This can make it difficult for our algorithm to correctly appraise high value loans leading to unrealized gains. Notice that for our given feature selection, we did maximize for profit. However, this was only for a single set of features. In that sense, this is question of model accuracy rather than optmization. Given the overlapping nature of the features in the data set, it is unlikely that this is case. Considering our algorithm is profitable, I would say that it recieves a satisfactory grade from the bank.</p>
+<p>This can make it difficult for our algorithm to correctly appraise high value loans leading to unrealized gains. The average profit for the training set was $1,630 per borrower, compared to $1,575 per borrower on the testing set. This small difference lends credence to the idea that our model is having trouble distinguishing profitable individuals from unprofitable ones. In that sense, this is a question of model selection rather than optimization. Given the overlapping nature of the features in the data set, and the fact that we are working with a linear model, it is unlikely that a better feature set exists. Considering our algorithm is profitable, I would say that it receives a satisfactory grade from the bank.</p>
 </section>
 <section id="evaluation---demographic-impact" class="level2">
 <h2 class="anchored" data-anchor-id="evaluation---demographic-impact">Evaluation - Demographic Impact</h2>
-<p>We’ll now investigate the impact the model has on potential borrowers. We’ll use the same features we discussed at the beggining. First, lets look at loan intent breakdown.</p>
+<p>We’ll now investigate the impact the model has on potential borrowers. We’ll use the same features we discussed at the beginning. First, let’s look at loan intent breakdown.</p>
+<p><img src="media/selectionByIntent.jpg" class="img-fluid"></p>
+<p>Across all loan intent types, we see that selection percent is just north of 80. Although there is likely a statistically significant difference among intent groups, it is not dramatic enough to suggest a high degree of harm. This is good, since it means that individuals seeking loans for important things like education or medical expenses will not be discriminated against. We might also examine age:</p>
+<p><img src="media/loanExtensionByAge.jpg" class="img-fluid"></p>
+<p>Again, all age brackets have just north of 80% selection. The major exception is the 65+ group, which has a selection rate just under 60%. This suggests that our algorithm is biased against older individuals, likely because they have lower incomes and a higher likelihood to default on loans relative to the population at large. Finally, we might consider Home Ownership Type, as this was an input feature to our model.</p>
 <div>
 
 </div>
@@ -500,36 +503,7 @@ window.Quarto = {
 <div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="media/loanIntentBreakDownAlgoSelect.jpg" class="img-fluid figure-img"></p>
-<figcaption>Selection Intent Breakdown</figcaption>
-</figure>
-</div>
-</div>
-<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="media/loanIntentBreakDownAlgoReject.jpg" class="img-fluid figure-img"></p>
-<figcaption>Rejection Intent Breakdown</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<div class="quarto-layout-row">
-<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
-<p>Loan Intent Breakdown for Algorithm Selections and Rejections.</p>
-</div>
-</div>
-</div>
-<p>Again, we see that their certainly is a change in the distriubtion. However, these changes are relatively minimal, which does not suggest that the algorithm is bias against loan intent. Looking at homeownership, we see that this tells a different story.</p>
-<div>
-
-</div>
-<div id="selectRejectIntent" class="quarto-layout-panel" data-layout-ncol="2">
-<div class="quarto-layout-row">
-<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="media/homeOwnershipBreakdownAlgoSelect.jpg" class="img-fluid figure-img"></p>
+<p><img src="media/Algo-HomeownershipSelect-SORTED.jpg" class="img-fluid figure-img"></p>
 <figcaption>Selection Ownership Types</figcaption>
 </figure>
 </div>
@@ -537,7 +511,7 @@ window.Quarto = {
 <div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="media/homeOwnershipBreakdownAlgoReject.jpg" class="img-fluid figure-img"></p>
+<p><img src="media/Algo-HomeownershipReject-SORTED.jpg" class="img-fluid figure-img"></p>
 <figcaption>Rejection Ownership Types</figcaption>
 </figure>
 </div>
@@ -549,9 +523,518 @@ window.Quarto = {
 </div>
 </div>
 </div>
-<p>We see that renters compose of 45.8% of Individuals seleclted for a loan, but 84.9% of individuals whose loan application was rejected. Individuals with morgages or who own homes make up about half of all loan selections, and around 14% of all loan rejections. If we make the same chart on the testing data, but instead look at historic defaults and repayments, we see that renters make up about 73% of individuals who default on their loans. Homeowners and invividuals with morgages make up about a quarter of loan defaults. Clearly, the algorithm we designed has made it harder for renters to get loans, thereby exascerbating existing inequality.</p>
-<p>Moreover, looking at the loan percent income by selection type used in the anlaysis for the bank, we see that our algorithm tends to select Individuals where loans are a lower portion of income. Commodities like healthcare and education tend to have a fixed, absolute cost regardless of economic background. Hence, this can make it harder for less afluent individuals to achieve wellbeing and economic advancement. This is confirmed looking at the mean income which is $70074 and $42644 for select and rejection groups respectively. Perhaps even more paradoxically, if homeownership / mortgage is a critical component in recieving a loan, how can we expect renters to own homes if they cannot recieve a loan to buy one in the first place?</p>
-<p>Given this information, we might think that profitability is at odds with social responsibility (i.e.&nbsp;equality in loan extension). The synthesis here is notice that the bank left some profit on the table–some of which could be gained by lending to a more diverse group with respect to ownership type. Perhaps we need more features that partition the dataset, or a better model through which the data can be trained on. Or perhaps we should not be doing machine learning here at all. Maybe numbers will never represent abstract notions of trustworthiness and interpersonal relations. A question for another time (or blog post?).</p>
+<p>We see that renters compose of 45.8% of Individuals seleclted for a loan, but 84.9% of individuals whose loan application was rejected. Individuals with mortgages or who own homes make up about half of all loan selections, and around 14% of all loan rejections. If we make the same chart on the testing data, but instead look at historic defaults and repayments, we see that renters make up about 73% of individuals who default on their loans. Homeowners and individuals mortgages make up about a quarter of loan defaults. Clearly, the algorithm we designed has made it harder for renters to get loans, thereby exacerbating existing inequality.</p>
+<p>Moreover, looking at the loan percent income by selection type used in the analysis for the bank, we see that our algorithm tends to select Individuals where loans are a lower portion of income. Commodities like healthcare and education tend to have a fixed, absolute cost regardless of economic background. Hence, this can make it harder for less affluent individuals to achieve wellbeing and economic advancement. This is confirmed looking at the mean income which is $70074 and $42644 for select and rejection groups respectively. Perhaps even more paradoxically, if homeownership / mortgage is a critical component in receiving a loan, how can we expect renters to own homes if they cannot receive a loan to buy one in the first place?</p>
+<p>Given this information, we might think that profitability is at odds with social responsibility (i.e.&nbsp;equality in loan extension). The synthesis there is notice that the bank left some profit on the table–some of which could be gained by lending to a more diverse group with respect to ownership type. Perhaps we need more features that partition the dataset, or a better model through which the data can be trained on. Or perhaps we should not be doing machine learning here at all. Maybe numbers will never represent abstract notions of trustworthiness and interpersonal relations. A question for another time (or blog post?).</p>
+</section>
+</section>
+<section id="reflection" class="level1">
+<h1>Reflection</h1>
+<p>On a technical level, one of the most important things that I learned is that we don’t need a high number of features to develop a relatively accurate model. In this case, as I experimented with adding features, model accuracy surprisingly decreased. I also learned (unknowingly) how to bootstrap a statistical distribution - pretty neat!</p>
+<p>On a more serious note, we might pose the following question: Considering that people seeking loans for medical expense have high rates of default, is it fair that it is more difficult for them to obtain access to credit? This is an important question, and I wanted to include it outside the official body of the blog post given the rhetorical shift. Of course, this question gets at one of the central inquiries of philosophy: What is the definition of fairness? I am not a philosopher, so I will not attempt to answer it. However, this definitely feels unfair, and I think we can lend some credence to that intuition. Money is transitory and a social construction. Your life is not. It seems strange that as a society we permit suffering and even death simply because some individuals don’t have enough colorful paper. Until we culturally shift the definition of freedom from unrestricted action to the capabilities one has to act, this will continue to be a problem.</p>
+</section>
+<section id="code-base" class="level1">
+<h1>Code Base</h1>
+<section id="utility-functions" class="level2">
+<h2 class="anchored" data-anchor-id="utility-functions">Utility Functions</h2>
+<div id="cell-13" class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>pd.set_option(<span class="st">'future.no_silent_downcasting'</span>, <span class="va">True</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> loadData(train_url, fileName):</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">#loads training data as pickle object in local dir</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    csv <span class="op">=</span> fileName <span class="op">+</span> <span class="st">".pkl"</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span>:</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        df <span class="op">=</span> pd.read_pickle(csv)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">except</span> <span class="pp">FileNotFoundError</span>:</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"Bootstrapping..."</span>)</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        df <span class="op">=</span> pd.read_csv(train_url)</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        df.to_pickle(csv)</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> df</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> clean(credit):</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="co">#converts categoricals to numerics and drops NA</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    ownershipMapping <span class="op">=</span> {<span class="st">"MORTGAGE"</span>: <span class="dv">0</span>, <span class="st">"OWN"</span>: <span class="dv">1</span>, <span class="st">"RENT"</span>: <span class="dv">2</span>, <span class="st">"OTHER"</span>: <span class="dv">3</span>, <span class="st">"Unknown"</span>: <span class="op">-</span><span class="dv">1</span>}</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    defaultMapping <span class="op">=</span> {<span class="st">"N"</span>: <span class="dv">0</span>, <span class="st">"Y"</span>: <span class="dv">1</span>, <span class="st">"Unknown"</span>: <span class="op">-</span><span class="dv">1</span>}</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    intentMapping <span class="op">=</span> {<span class="st">"VENTURE"</span>: <span class="dv">0</span>, <span class="st">"EDUCATION"</span>: <span class="dv">1</span>, <span class="st">"MEDICAL"</span>: <span class="dv">2</span>, <span class="st">"HOMEIMPROVEMENT"</span>: <span class="dv">3</span>, <span class="st">"PERSONAL"</span>: <span class="dv">4</span>, <span class="st">"DEBTCONSOLIDATION"</span> : <span class="dv">5</span>, <span class="st">"Unknown"</span>: <span class="op">-</span><span class="dv">1</span>}</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    gradeMapping <span class="op">=</span> {<span class="st">'B'</span>:<span class="dv">1</span>,  <span class="st">'C'</span>: <span class="dv">2</span>, <span class="st">'A'</span>:<span class="dv">0</span>, <span class="st">'D'</span>:<span class="dv">3</span>, <span class="st">'E'</span>:<span class="dv">4</span>, <span class="st">'F'</span>:<span class="dv">4</span>, <span class="st">'G'</span>:<span class="dv">5</span>}</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    credit[<span class="st">"person_home_ownership"</span>] <span class="op">=</span> credit[<span class="st">"person_home_ownership"</span>] <span class="op">=</span> credit[<span class="st">"person_home_ownership"</span>].replace(ownershipMapping).ffill()</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    credit[<span class="st">"cb_person_default_on_file"</span>] <span class="op">=</span> credit[<span class="st">"cb_person_default_on_file"</span>] <span class="op">=</span> credit[<span class="st">"cb_person_default_on_file"</span>].replace(defaultMapping).ffill()</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    credit[<span class="st">"loan_intent"</span>] <span class="op">=</span> credit[<span class="st">"loan_intent"</span>] <span class="op">=</span> credit[<span class="st">"loan_intent"</span>].replace(intentMapping).ffill()</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    credit[<span class="st">"loan_grade"</span>] <span class="op">=</span> credit[<span class="st">"loan_grade"</span>] <span class="op">=</span> credit[<span class="st">"loan_grade"</span>].replace(gradeMapping).ffill()</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>    credit <span class="op">=</span> credit.dropna()</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> credit</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> sampleMaxProfit(credit, n, k, scoreRange):</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>    <span class="co">#samples size n from df credit.</span></span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>    <span class="co">#tests tresholds across </span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>    T <span class="op">=</span> scoreRange[<span class="dv">0</span>]</span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>    maxTuple <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">0</span>]</span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>    sample <span class="op">=</span> credit.sample(n)</span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>    delta_T <span class="op">=</span> (<span class="bu">abs</span>(scoreRange[<span class="dv">1</span>] <span class="op">-</span> scoreRange[<span class="dv">0</span>]))<span class="op">/</span>k</span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> T <span class="op">&lt;</span> scoreRange[<span class="dv">1</span>]: <span class="co">#can we do this without a loop?</span></span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>        PnL <span class="op">=</span> sample.loc[sample[<span class="st">'probability_score'</span>] <span class="op">&lt;=</span> T, <span class="st">'PnL'</span>].<span class="bu">sum</span>()</span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (PnL <span class="op">&gt;</span> maxTuple[<span class="dv">0</span>]):</span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>            maxTuple <span class="op">=</span> [PnL, T]</span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>        T <span class="op">+=</span> delta_T</span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> maxTuple[<span class="dv">1</span>] </span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> optimalProfitScore(credit, iterations, n, k):</span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Finds treshold score T that optmizes profit</span></span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>    testResult <span class="op">=</span> []</span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>    scoreRange <span class="op">=</span> [credit[<span class="st">"probability_score"</span>].<span class="bu">min</span>(), credit[<span class="st">"probability_score"</span>].<span class="bu">max</span>()]</span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>, iterations): <span class="co"># can we do this without a loop??</span></span>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>        testResult.append(sampleMaxProfit(credit, n, k, scoreRange))</span>
+<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a>    npTestResult <span class="op">=</span> np.array(testResult)</span>
+<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fl">1.06</span> <span class="op">*</span> np.mean(npTestResult)</span>
+<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> generateSampleGraph(df, n, k, t_star):</span>
+<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a>    <span class="co">#initialize</span></span>
+<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a>    scoreRange <span class="op">=</span> [df[<span class="st">"probability_score"</span>].<span class="bu">min</span>(), df[<span class="st">"probability_score"</span>].<span class="bu">max</span>()]</span>
+<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a>    t_values <span class="op">=</span> []</span>
+<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a>    PnL_values <span class="op">=</span> []</span>
+<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a>    T <span class="op">=</span> scoreRange[<span class="dv">0</span>]</span>
+<span id="cb5-64"><a href="#cb5-64" aria-hidden="true" tabindex="-1"></a>    sample <span class="op">=</span> df</span>
+<span id="cb5-65"><a href="#cb5-65" aria-hidden="true" tabindex="-1"></a>    delta_T <span class="op">=</span> (<span class="bu">abs</span>(scoreRange[<span class="dv">1</span>] <span class="op">-</span> scoreRange[<span class="dv">0</span>]))<span class="op">/</span>k</span>
+<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a>    tMax <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">0</span>] <span class="co">#[T, P(T)]</span></span>
+<span id="cb5-67"><a href="#cb5-67" aria-hidden="true" tabindex="-1"></a>    <span class="co">#collect data</span></span>
+<span id="cb5-68"><a href="#cb5-68" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> T <span class="op">&lt;</span> scoreRange[<span class="dv">1</span>]: <span class="co">#can we do this without a loop?</span></span>
+<span id="cb5-69"><a href="#cb5-69" aria-hidden="true" tabindex="-1"></a>        PnL <span class="op">=</span> sample.loc[sample[<span class="st">'probability_score'</span>] <span class="op">&lt;</span> T, <span class="st">'PnL'</span>].<span class="bu">sum</span>()</span>
+<span id="cb5-70"><a href="#cb5-70" aria-hidden="true" tabindex="-1"></a>        t_values.append(T)</span>
+<span id="cb5-71"><a href="#cb5-71" aria-hidden="true" tabindex="-1"></a>        PnL_values.append(PnL)</span>
+<span id="cb5-72"><a href="#cb5-72" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> PnL <span class="op">&gt;</span> tMax[<span class="dv">1</span>]:</span>
+<span id="cb5-73"><a href="#cb5-73" aria-hidden="true" tabindex="-1"></a>            tMax <span class="op">=</span> [T, PnL]</span>
+<span id="cb5-74"><a href="#cb5-74" aria-hidden="true" tabindex="-1"></a>        T <span class="op">+=</span> delta_T</span>
+<span id="cb5-75"><a href="#cb5-75" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"Maximum T: "</span> <span class="op">+</span> <span class="bu">str</span>(tMax[<span class="dv">0</span>]))</span>
+<span id="cb5-76"><a href="#cb5-76" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"T*: "</span> <span class="op">+</span> <span class="bu">str</span>(t_star))</span>
+<span id="cb5-77"><a href="#cb5-77" aria-hidden="true" tabindex="-1"></a>    <span class="co">#make graph</span></span>
+<span id="cb5-78"><a href="#cb5-78" aria-hidden="true" tabindex="-1"></a>    plt.scatter(t_values, PnL_values)</span>
+<span id="cb5-79"><a href="#cb5-79" aria-hidden="true" tabindex="-1"></a>    <span class="co">#plot red line</span></span>
+<span id="cb5-80"><a href="#cb5-80" aria-hidden="true" tabindex="-1"></a>    vertical_line_x <span class="op">=</span> tMax[<span class="dv">0</span>]</span>
+<span id="cb5-81"><a href="#cb5-81" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (t_star <span class="op">&gt;</span> <span class="dv">0</span>):</span>
+<span id="cb5-82"><a href="#cb5-82" aria-hidden="true" tabindex="-1"></a>        plt.axvline(x<span class="op">=</span>t_star, color<span class="op">=</span><span class="st">'orange'</span>, linestyle<span class="op">=</span><span class="st">'--'</span>, alpha <span class="op">=</span> <span class="fl">0.7</span>)</span>
+<span id="cb5-83"><a href="#cb5-83" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Plot the vertical line</span></span>
+<span id="cb5-84"><a href="#cb5-84" aria-hidden="true" tabindex="-1"></a>    plt.axvline(x<span class="op">=</span>vertical_line_x, color<span class="op">=</span><span class="st">'red'</span>, linestyle<span class="op">=</span><span class="st">'--'</span>, alpha <span class="op">=</span> <span class="fl">0.7</span>)</span>
+<span id="cb5-85"><a href="#cb5-85" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Add labels and title and make pretty</span></span>
+<span id="cb5-86"><a href="#cb5-86" aria-hidden="true" tabindex="-1"></a>    plt.xlabel(<span class="st">'Threshold [T]'</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb5-87"><a href="#cb5-87" aria-hidden="true" tabindex="-1"></a>    plt.ylabel(<span class="st">'PnL [P(T)]'</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb5-88"><a href="#cb5-88" aria-hidden="true" tabindex="-1"></a>    plt.title(<span class="st">'Treshold vs PnL'</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb5-89"><a href="#cb5-89" aria-hidden="true" tabindex="-1"></a>    plt.xticks(fontname<span class="op">=</span><span class="st">'Courier'</span>, fontsize<span class="op">=</span><span class="dv">10</span>)  <span class="co"># Change font to Courier</span></span>
+<span id="cb5-90"><a href="#cb5-90" aria-hidden="true" tabindex="-1"></a>    plt.yticks(fontname<span class="op">=</span><span class="st">'Courier'</span>, fontsize<span class="op">=</span><span class="dv">10</span>) </span>
+<span id="cb5-91"><a href="#cb5-91" aria-hidden="true" tabindex="-1"></a>    plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="data-visualization-and-model" class="level2">
+<h2 class="anchored" data-anchor-id="data-visualization-and-model">Data Visualization and Model</h2>
+<div id="cell-15" class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> utility</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> scipy.stats <span class="im">as</span> stats</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> accuracy_score</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LogisticRegression</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>DELTA_T <span class="op">=</span> <span class="fl">0.5</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>URL_TRAIN <span class="op">=</span> <span class="st">"https://raw.githubusercontent.com/PhilChodrow/ml-notes/main/data/credit-risk/train.csv"</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>URL_TEST <span class="op">=</span> <span class="st">"https://raw.githubusercontent.com/PhilChodrow/ml-notes/main/data/credit-risk/test.csv"</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>TRAIN_FILE_NAME <span class="op">=</span> <span class="st">"creditTrainingData"</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>TEST_FILE_NAME <span class="op">=</span> <span class="st">"creditTestingData"</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>credit <span class="op">=</span> utility.loadData(URL_TRAIN, TRAIN_FILE_NAME)</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>creditTest <span class="op">=</span> utility.loadData(URL_TEST, TEST_FILE_NAME)</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>credit <span class="op">=</span> utility.clean(credit)</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>creditTest <span class="op">=</span> utility.clean(creditTest)</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="co">#DATA VISUALIATION OF METRICS OF INTERESTS</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>interestingFeatures <span class="op">=</span> [<span class="st">"loan_percent_income"</span>, <span class="st">"cb_person_default_on_file"</span>, <span class="st">"person_home_ownership"</span>]</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a><span class="co">#interestingFeatures = ["cb_person_default_on_file", "person_home_ownership", "loan_grade"]</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>sns.pairplot(credit.select_dtypes(include<span class="op">=</span>[<span class="st">'int'</span>, <span class="st">'float'</span>]), hue <span class="op">=</span> <span class="st">"loan_status"</span>, kind<span class="op">=</span><span class="st">'reg'</span>, height <span class="op">=</span> <span class="dv">1</span>, aspect <span class="op">=</span> <span class="dv">1</span>)</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>plt.legend().remove()</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>correlation_matrix <span class="op">=</span> credit.select_dtypes(include<span class="op">=</span>[<span class="st">'int'</span>, <span class="st">'float'</span>]).corr()</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>correlation_matrix <span class="op">=</span> credit.corr()</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="co"># #Plot the correlation matrix as a heatmap</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">6</span>))</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>sns.heatmap(correlation_matrix, annot<span class="op">=</span><span class="va">True</span>, cmap<span class="op">=</span><span class="st">'coolwarm'</span>, fmt<span class="op">=</span><span class="st">".2f"</span>, annot_kws<span class="op">=</span>{<span class="st">"size"</span>: <span class="dv">10</span>})</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Correlation Matrix'</span>)</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a><span class="co">#high percent income group by HOME_OWNERSHIP</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>num_bins <span class="op">=</span> <span class="dv">6</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"here"</span>)</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>hist_data <span class="op">=</span> []</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>ownershipMapping <span class="op">=</span> {<span class="dv">0</span>: <span class="st">"MORTGAGE"</span>, <span class="dv">1</span>: <span class="st">"OWN"</span>, <span class="dv">2</span>: <span class="st">"RENT"</span>, <span class="dv">3</span>: <span class="st">"OTHER"</span>, <span class="op">-</span><span class="dv">1</span> : <span class="st">"Unknown"</span>}</span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>colors <span class="op">=</span> [<span class="st">"#82C272"</span>, <span class="st">"#00A88F"</span>, <span class="st">"#0087AC"</span>, <span class="st">"#005FAA"</span>]</span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>creditTemp <span class="op">=</span> credit[credit[<span class="st">"loan_percent_income"</span>] <span class="op">&lt;=</span> <span class="fl">.5</span>]</span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>unique_categories <span class="op">=</span> creditTemp[<span class="st">"person_home_ownership"</span>].unique()</span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a><span class="co"># Loop through each category value</span></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> category_value <span class="kw">in</span> unique_categories:</span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Filter DataFrame for the current category</span></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>    category_data <span class="op">=</span> creditTemp[creditTemp[<span class="st">"person_home_ownership"</span>] <span class="op">==</span> category_value][<span class="st">'loan_percent_income'</span>]</span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Append the data to the list</span></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>    hist_data.append(category_data)</span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>plt.hist(hist_data, bins<span class="op">=</span>num_bins, stacked<span class="op">=</span><span class="va">True</span>, label<span class="op">=</span>unique_categories, color <span class="op">=</span> colors)</span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a><span class="co"># Add labels, title, and make pretty</span></span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Loan Percent of Income"</span>, font<span class="op">=</span><span class="st">"Courier"</span>)</span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Number of Borrowers by Home Ownership Type"</span>, font<span class="op">=</span><span class="st">"Courier"</span>)</span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Loan Percent of Income by Homeownership"</span>, font<span class="op">=</span><span class="st">"Courier"</span>)</span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>legend_labels <span class="op">=</span> [ownershipMapping[numericCode] <span class="cf">for</span> numericCode <span class="kw">in</span> unique_categories]</span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>plt.legend(labels<span class="op">=</span>legend_labels)</span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a>plt.xticks(fontname<span class="op">=</span><span class="st">'Courier'</span>, fontsize<span class="op">=</span><span class="dv">10</span>)  <span class="co"># Change font to Courier</span></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>plt.yticks(fontname<span class="op">=</span><span class="st">'Courier'</span>, fontsize<span class="op">=</span><span class="dv">10</span>) </span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a><span class="co"># Show plot</span></span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>statusMapping <span class="op">=</span> {<span class="dv">0</span>: <span class="st">"Repaid"</span>, <span class="dv">1</span>: <span class="st">"Defaulted"</span>}</span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a><span class="co">#Loan Default Status by Loan Amounts</span></span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a>num_bins <span class="op">=</span> <span class="dv">6</span></span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a>hist_data <span class="op">=</span> []</span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a>colors <span class="op">=</span> [<span class="st">"#82C272"</span>, <span class="st">"#00A88F"</span>]<span class="co">#"#0087AC"]# "#005FAA"]</span></span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a>creditTemp <span class="op">=</span> credit</span>
+<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a>unique_categories <span class="op">=</span> creditTemp[<span class="st">"loan_status"</span>].unique()</span>
+<span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a><span class="co"># Loop through each category value</span></span>
+<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> category_value <span class="kw">in</span> unique_categories:</span>
+<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Filter DataFrame for the current category</span></span>
+<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a>    category_data <span class="op">=</span> creditTemp[creditTemp[<span class="st">"loan_status"</span>] <span class="op">==</span> category_value][<span class="st">'loan_amnt'</span>]</span>
+<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Append the data to the list</span></span>
+<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a>    hist_data.append(category_data)</span>
+<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a>plt.hist(hist_data, bins<span class="op">=</span>num_bins, stacked<span class="op">=</span><span class="va">True</span>, label<span class="op">=</span>unique_categories, color <span class="op">=</span> colors)</span>
+<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a><span class="co"># Add labels, title, and make pretty</span></span>
+<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Loan Amount ($)"</span>, font<span class="op">=</span><span class="st">"Courier"</span>)</span>
+<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Frequency"</span>, font<span class="op">=</span><span class="st">"Courier"</span>)</span>
+<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Loan Defaults and Repayments by Amount"</span>, font<span class="op">=</span><span class="st">"Courier"</span>)</span>
+<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a>legend_labels <span class="op">=</span> [statusMapping[numericCode] <span class="cf">for</span> numericCode <span class="kw">in</span> unique_categories]</span>
+<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a>plt.legend(labels<span class="op">=</span>legend_labels)</span>
+<span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a>plt.xticks(fontname<span class="op">=</span><span class="st">'Courier'</span>, fontsize<span class="op">=</span><span class="dv">10</span>)  <span class="co"># Change font to Courier</span></span>
+<span id="cb6-90"><a href="#cb6-90" aria-hidden="true" tabindex="-1"></a>plt.yticks(fontname<span class="op">=</span><span class="st">'Courier'</span>, fontsize<span class="op">=</span><span class="dv">10</span>) </span>
+<span id="cb6-91"><a href="#cb6-91" aria-hidden="true" tabindex="-1"></a><span class="co"># Show plot</span></span>
+<span id="cb6-92"><a href="#cb6-92" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb6-93"><a href="#cb6-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-94"><a href="#cb6-94" aria-hidden="true" tabindex="-1"></a><span class="co">#PIE #1</span></span>
+<span id="cb6-95"><a href="#cb6-95" aria-hidden="true" tabindex="-1"></a>statusMapping <span class="op">=</span> {<span class="dv">0</span>: <span class="st">"Repaid"</span>, <span class="dv">1</span>: <span class="st">"Defaulted"</span>}</span>
+<span id="cb6-96"><a href="#cb6-96" aria-hidden="true" tabindex="-1"></a><span class="co">#Plotting Loan Status by Intent </span></span>
+<span id="cb6-97"><a href="#cb6-97" aria-hidden="true" tabindex="-1"></a>colors <span class="op">=</span> [<span class="st">"green"</span>, <span class="st">"#82C272"</span>, <span class="st">"#00A88F"</span>, <span class="st">"#0087AC"</span>, <span class="st">"#005FAA"</span>, <span class="st">"#323B81"</span>]</span>
+<span id="cb6-98"><a href="#cb6-98" aria-hidden="true" tabindex="-1"></a>intentMapping <span class="op">=</span> {<span class="dv">0</span>: <span class="st">"Venture"</span>, <span class="dv">1</span>: <span class="st">"Education"</span>, <span class="dv">2</span>: <span class="st">"Medical"</span>, <span class="dv">3</span>: <span class="st">"Home Improvement"</span>, <span class="dv">4</span>: <span class="st">"Personal"</span>, <span class="dv">5</span>: <span class="st">"Debt Consolidation"</span>, <span class="op">-</span><span class="dv">1</span>: <span class="st">"Unknown"</span>}</span>
+<span id="cb6-99"><a href="#cb6-99" aria-hidden="true" tabindex="-1"></a>loan_status_groups <span class="op">=</span> credit[<span class="st">"loan_status"</span>].unique()</span>
+<span id="cb6-100"><a href="#cb6-100" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> status <span class="kw">in</span> loan_status_groups:</span>
+<span id="cb6-101"><a href="#cb6-101" aria-hidden="true" tabindex="-1"></a>    group_data <span class="op">=</span> credit[credit[<span class="st">"loan_status"</span>] <span class="op">==</span> status]</span>
+<span id="cb6-102"><a href="#cb6-102" aria-hidden="true" tabindex="-1"></a>    category_counts <span class="op">=</span> group_data[<span class="st">"loan_intent"</span>].value_counts().sort_index()</span>
+<span id="cb6-103"><a href="#cb6-103" aria-hidden="true" tabindex="-1"></a>    labels <span class="op">=</span> [intentMapping.get(x) <span class="cf">for</span> x <span class="kw">in</span> category_counts.index]</span>
+<span id="cb6-104"><a href="#cb6-104" aria-hidden="true" tabindex="-1"></a>    sizes <span class="op">=</span> category_counts.values</span>
+<span id="cb6-105"><a href="#cb6-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-106"><a href="#cb6-106" aria-hidden="true" tabindex="-1"></a>    plt.figure()</span>
+<span id="cb6-107"><a href="#cb6-107" aria-hidden="true" tabindex="-1"></a>    pie <span class="op">=</span> plt.pie(sizes, labels <span class="op">=</span> labels, autopct<span class="op">=</span><span class="st">"</span><span class="sc">%1.1f%%</span><span class="st">"</span>, startangle <span class="op">=</span> <span class="dv">140</span>, colors <span class="op">=</span> colors)</span>
+<span id="cb6-108"><a href="#cb6-108" aria-hidden="true" tabindex="-1"></a>    plt.title(<span class="st">"Intent Breakdown for "</span> <span class="op">+</span> <span class="bu">str</span>(statusMapping[status]) <span class="op">+</span> <span class="st">" Loans"</span>, fontname <span class="op">=</span> <span class="st">"Courier"</span>, fontsize <span class="op">=</span> <span class="dv">14</span>)</span>
+<span id="cb6-109"><a href="#cb6-109" aria-hidden="true" tabindex="-1"></a>    <span class="co">#make pretty</span></span>
+<span id="cb6-110"><a href="#cb6-110" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> text <span class="kw">in</span> pie[<span class="dv">1</span>]:</span>
+<span id="cb6-111"><a href="#cb6-111" aria-hidden="true" tabindex="-1"></a>        text.set_fontname(<span class="st">"Courier"</span>)</span>
+<span id="cb6-112"><a href="#cb6-112" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb6-113"><a href="#cb6-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-114"><a href="#cb6-114" aria-hidden="true" tabindex="-1"></a><span class="co">#statistical test</span></span>
+<span id="cb6-115"><a href="#cb6-115" aria-hidden="true" tabindex="-1"></a>contingency_table <span class="op">=</span> pd.crosstab(credit[<span class="st">"loan_status"</span>], credit[<span class="st">"loan_intent"</span>])</span>
+<span id="cb6-116"><a href="#cb6-116" aria-hidden="true" tabindex="-1"></a>chi2_stat, p_val, dof, expected <span class="op">=</span> stats.chi2_contingency(contingency_table)</span>
+<span id="cb6-117"><a href="#cb6-117" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Chi-square statistic"</span>, chi2_stat)</span>
+<span id="cb6-118"><a href="#cb6-118" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"P-value"</span>, p_val)</span>
+<span id="cb6-119"><a href="#cb6-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-120"><a href="#cb6-120" aria-hidden="true" tabindex="-1"></a><span class="co">#PIE #2</span></span>
+<span id="cb6-121"><a href="#cb6-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-122"><a href="#cb6-122" aria-hidden="true" tabindex="-1"></a><span class="co">#Plotting Loan Status by Ownership tyoe</span></span>
+<span id="cb6-123"><a href="#cb6-123" aria-hidden="true" tabindex="-1"></a>colors <span class="op">=</span> [<span class="st">"green"</span>, <span class="st">"#82C272"</span>, <span class="st">"#00A88F"</span>, <span class="st">"#0087AC"</span>, <span class="st">"#005FAA"</span>, <span class="st">"#323B81"</span>]</span>
+<span id="cb6-124"><a href="#cb6-124" aria-hidden="true" tabindex="-1"></a>ownershipMapping <span class="op">=</span> {<span class="dv">0</span>: <span class="st">"MORTGAGE"</span>, <span class="dv">1</span>: <span class="st">"OWN"</span>, <span class="dv">2</span>: <span class="st">"RENT"</span>, <span class="dv">3</span>: <span class="st">"OTHER"</span>, <span class="op">-</span><span class="dv">1</span> : <span class="st">"Unknown"</span>}</span>
+<span id="cb6-125"><a href="#cb6-125" aria-hidden="true" tabindex="-1"></a>loan_status_groups <span class="op">=</span> credit[<span class="st">"loan_status"</span>].unique()</span>
+<span id="cb6-126"><a href="#cb6-126" aria-hidden="true" tabindex="-1"></a>loan_status_groups <span class="op">=</span> loan_status_groups</span>
+<span id="cb6-127"><a href="#cb6-127" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> status <span class="kw">in</span> loan_status_groups:</span>
+<span id="cb6-128"><a href="#cb6-128" aria-hidden="true" tabindex="-1"></a>    group_data <span class="op">=</span> credit[credit[<span class="st">"loan_status"</span>] <span class="op">==</span> status]</span>
+<span id="cb6-129"><a href="#cb6-129" aria-hidden="true" tabindex="-1"></a>    category_counts <span class="op">=</span> group_data[<span class="st">"person_home_ownership"</span>].value_counts().sort_index()</span>
+<span id="cb6-130"><a href="#cb6-130" aria-hidden="true" tabindex="-1"></a>    labels <span class="op">=</span> [ownershipMapping.get(x) <span class="cf">for</span> x <span class="kw">in</span> category_counts.index]</span>
+<span id="cb6-131"><a href="#cb6-131" aria-hidden="true" tabindex="-1"></a>    sizes <span class="op">=</span> category_counts.values</span>
+<span id="cb6-132"><a href="#cb6-132" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-133"><a href="#cb6-133" aria-hidden="true" tabindex="-1"></a>    plt.figure()</span>
+<span id="cb6-134"><a href="#cb6-134" aria-hidden="true" tabindex="-1"></a>    pie <span class="op">=</span> plt.pie(sizes, labels <span class="op">=</span> labels, autopct<span class="op">=</span><span class="st">"</span><span class="sc">%1.1f%%</span><span class="st">"</span>, startangle <span class="op">=</span> <span class="dv">140</span>, colors <span class="op">=</span> colors)</span>
+<span id="cb6-135"><a href="#cb6-135" aria-hidden="true" tabindex="-1"></a>    plt.title(<span class="st">"Home Ownership Breakdown for "</span> <span class="op">+</span> <span class="bu">str</span>(statusMapping[status]) <span class="op">+</span> <span class="st">" Loans"</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb6-136"><a href="#cb6-136" aria-hidden="true" tabindex="-1"></a>     <span class="co">#make pretty</span></span>
+<span id="cb6-137"><a href="#cb6-137" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> text <span class="kw">in</span> pie[<span class="dv">1</span>]:</span>
+<span id="cb6-138"><a href="#cb6-138" aria-hidden="true" tabindex="-1"></a>        text.set_fontname(<span class="st">"Courier"</span>)</span>
+<span id="cb6-139"><a href="#cb6-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-140"><a href="#cb6-140" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb6-141"><a href="#cb6-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-142"><a href="#cb6-142" aria-hidden="true" tabindex="-1"></a>statusMapping <span class="op">=</span> {<span class="dv">0</span>: <span class="st">"Repaid"</span>, <span class="dv">1</span>: <span class="st">"Defaulted"</span>}</span>
+<span id="cb6-143"><a href="#cb6-143" aria-hidden="true" tabindex="-1"></a><span class="co">#statistical test</span></span>
+<span id="cb6-144"><a href="#cb6-144" aria-hidden="true" tabindex="-1"></a>contingency_table <span class="op">=</span> pd.crosstab(credit[<span class="st">"loan_status"</span>], credit[<span class="st">"person_home_ownership"</span>])</span>
+<span id="cb6-145"><a href="#cb6-145" aria-hidden="true" tabindex="-1"></a>chi2_stat, p_val, dof, expected <span class="op">=</span> stats.chi2_contingency(contingency_table)</span>
+<span id="cb6-146"><a href="#cb6-146" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Chi-square statistic"</span>, chi2_stat)</span>
+<span id="cb6-147"><a href="#cb6-147" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"P-value"</span>, p_val)</span>
+<span id="cb6-148"><a href="#cb6-148" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-149"><a href="#cb6-149" aria-hidden="true" tabindex="-1"></a><span class="co"># #statistical test for HOME OWNERSHIP VS LOAN AMOUNT</span></span>
+<span id="cb6-150"><a href="#cb6-150" aria-hidden="true" tabindex="-1"></a><span class="co"># x = credit[credit["loan_percent_income"] &lt;= .5]</span></span>
+<span id="cb6-151"><a href="#cb6-151" aria-hidden="true" tabindex="-1"></a><span class="co"># contingency_table = pd.crosstab(credit[credit["loan_percent_income"] &gt; .5], credit["person_home_ownership"])</span></span>
+<span id="cb6-152"><a href="#cb6-152" aria-hidden="true" tabindex="-1"></a><span class="co"># chi2_stat, p_val, dof, expected = stats.chi2_contingency(contingency_table)</span></span>
+<span id="cb6-153"><a href="#cb6-153" aria-hidden="true" tabindex="-1"></a><span class="co"># print("Chi-square statistic", chi2_stat)</span></span>
+<span id="cb6-154"><a href="#cb6-154" aria-hidden="true" tabindex="-1"></a><span class="co"># print("P-value", p_val)</span></span>
+<span id="cb6-155"><a href="#cb6-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-156"><a href="#cb6-156" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-157"><a href="#cb6-157" aria-hidden="true" tabindex="-1"></a><span class="co">#PLOTTING LOAN AMOUNT VS INCOME</span></span>
+<span id="cb6-158"><a href="#cb6-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-159"><a href="#cb6-159" aria-hidden="true" tabindex="-1"></a><span class="co"># custom_colors = {0: "#82C272", 1 :"#0087AC"}</span></span>
+<span id="cb6-160"><a href="#cb6-160" aria-hidden="true" tabindex="-1"></a><span class="co"># sns.set(style = 'whitegrid', font = "Courier")</span></span>
+<span id="cb6-161"><a href="#cb6-161" aria-hidden="true" tabindex="-1"></a><span class="co"># for key, value in custom_colors.items():</span></span>
+<span id="cb6-162"><a href="#cb6-162" aria-hidden="true" tabindex="-1"></a><span class="co">#     custom_colors[key] = value + '80'</span></span>
+<span id="cb6-163"><a href="#cb6-163" aria-hidden="true" tabindex="-1"></a><span class="co"># sns.scatterplot(x = "person_income", y = "loan_amnt", hue = "loan_status", palette = custom_colors, data = credit)</span></span>
+<span id="cb6-164"><a href="#cb6-164" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.xlim(-1000000, 1000000)</span></span>
+<span id="cb6-165"><a href="#cb6-165" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.title("Loan Amount vs. Income")</span></span>
+<span id="cb6-166"><a href="#cb6-166" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.xlabel("Loan Amount")</span></span>
+<span id="cb6-167"><a href="#cb6-167" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.ylabel("Person Income")</span></span>
+<span id="cb6-168"><a href="#cb6-168" aria-hidden="true" tabindex="-1"></a><span class="co"># plt.show()</span></span>
+<span id="cb6-169"><a href="#cb6-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-170"><a href="#cb6-170" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"fitting model"</span>)</span>
+<span id="cb6-171"><a href="#cb6-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-172"><a href="#cb6-172" aria-hidden="true" tabindex="-1"></a>LR <span class="op">=</span> LogisticRegression()</span>
+<span id="cb6-173"><a href="#cb6-173" aria-hidden="true" tabindex="-1"></a>LR.fit(credit[interestingFeatures], credit[<span class="st">"loan_status"</span>])</span>
+<span id="cb6-174"><a href="#cb6-174" aria-hidden="true" tabindex="-1"></a><span class="co">#scoring model</span></span>
+<span id="cb6-175"><a href="#cb6-175" aria-hidden="true" tabindex="-1"></a>pred <span class="op">=</span> LR.predict(creditTest[interestingFeatures])</span>
+<span id="cb6-176"><a href="#cb6-176" aria-hidden="true" tabindex="-1"></a>credit[<span class="st">"probability_score"</span>] <span class="op">=</span> LR.predict_proba(credit[interestingFeatures])[:, <span class="dv">1</span>]</span>
+<span id="cb6-177"><a href="#cb6-177" aria-hidden="true" tabindex="-1"></a>creditTest[<span class="st">"probability_score"</span>] <span class="op">=</span> LR.predict_proba(creditTest[interestingFeatures])[:, <span class="dv">1</span>]</span>
+<span id="cb6-178"><a href="#cb6-178" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-179"><a href="#cb6-179" aria-hidden="true" tabindex="-1"></a>accuracy <span class="op">=</span> accuracy_score(pred, creditTest[<span class="st">"loan_status"</span>])</span>
+<span id="cb6-180"><a href="#cb6-180" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-181"><a href="#cb6-181" aria-hidden="true" tabindex="-1"></a><span class="co">#creating score columns</span></span>
+<span id="cb6-182"><a href="#cb6-182" aria-hidden="true" tabindex="-1"></a><span class="co"># credit["score"] =  weights[0][0] * credit["loan_percent_income"] + weights[0][1] * credit["cb_person_default_on_file"] + weights[0][2] * credit["person_home_ownership"]</span></span>
+<span id="cb6-183"><a href="#cb6-183" aria-hidden="true" tabindex="-1"></a><span class="co"># creditTest["score"] = weights[0][0] * creditTest["loan_percent_income"] + weights[0][1] * creditTest["cb_person_default_on_file"] + weights[0][2] * creditTest["person_home_ownership"]</span></span>
+<span id="cb6-184"><a href="#cb6-184" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-185"><a href="#cb6-185" aria-hidden="true" tabindex="-1"></a><span class="co">#creating PnL columns</span></span>
+<span id="cb6-186"><a href="#cb6-186" aria-hidden="true" tabindex="-1"></a>percentProfit <span class="op">=</span> <span class="fl">.25</span></span>
+<span id="cb6-187"><a href="#cb6-187" aria-hidden="true" tabindex="-1"></a>credit.loc[credit[<span class="st">"loan_status"</span>] <span class="op">==</span> <span class="dv">0</span>, <span class="st">"PnL"</span>] <span class="op">=</span> credit[<span class="st">"loan_amnt"</span>] <span class="op">*</span> (<span class="dv">1</span> <span class="op">+</span>  percentProfit <span class="op">*</span> <span class="fl">.01</span> <span class="op">*</span> credit[<span class="st">"loan_int_rate"</span>])<span class="op">**</span><span class="dv">10</span> <span class="op">-</span> credit[<span class="st">"loan_amnt"</span>]</span>
+<span id="cb6-188"><a href="#cb6-188" aria-hidden="true" tabindex="-1"></a>credit.loc[credit[<span class="st">"loan_status"</span>] <span class="op">==</span> <span class="dv">1</span>, <span class="st">"PnL"</span>] <span class="op">=</span> credit[<span class="st">"loan_amnt"</span>]<span class="op">*</span> (<span class="dv">1</span> <span class="op">+</span>  percentProfit <span class="op">*</span> <span class="fl">.01</span> <span class="op">*</span>credit[<span class="st">"loan_int_rate"</span>])<span class="op">**</span><span class="dv">3</span> <span class="op">-</span> <span class="fl">1.7</span> <span class="op">*</span> credit[<span class="st">"loan_amnt"</span>]</span>
+<span id="cb6-189"><a href="#cb6-189" aria-hidden="true" tabindex="-1"></a>creditTest[<span class="st">"loan_status_pred"</span>] <span class="op">=</span> pred</span>
+<span id="cb6-190"><a href="#cb6-190" aria-hidden="true" tabindex="-1"></a>creditTest.loc[creditTest[<span class="st">"loan_status"</span>] <span class="op">==</span> <span class="dv">0</span>, <span class="st">"PnL"</span>] <span class="op">=</span> creditTest[<span class="st">"loan_amnt"</span>] <span class="op">*</span> (<span class="dv">1</span> <span class="op">+</span>  percentProfit <span class="op">*</span> <span class="fl">.01</span> <span class="op">*</span> creditTest[<span class="st">"loan_int_rate"</span>])<span class="op">**</span><span class="dv">10</span> <span class="op">-</span> creditTest[<span class="st">"loan_amnt"</span>]</span>
+<span id="cb6-191"><a href="#cb6-191" aria-hidden="true" tabindex="-1"></a>creditTest.loc[creditTest[<span class="st">"loan_status"</span>] <span class="op">==</span> <span class="dv">1</span>, <span class="st">"PnL"</span>] <span class="op">=</span> creditTest[<span class="st">"loan_amnt"</span>]<span class="op">*</span> (<span class="dv">1</span> <span class="op">+</span>  percentProfit <span class="op">*</span> <span class="fl">.01</span> <span class="op">*</span> creditTest[<span class="st">"loan_int_rate"</span>])<span class="op">**</span><span class="dv">3</span> <span class="op">-</span> <span class="fl">1.7</span> <span class="op">*</span> creditTest[<span class="st">"loan_amnt"</span>]</span>
+<span id="cb6-192"><a href="#cb6-192" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-193"><a href="#cb6-193" aria-hidden="true" tabindex="-1"></a><span class="co"># print(credit.loc[credit["loan_status"] == 0, "probability_score"].mean())</span></span>
+<span id="cb6-194"><a href="#cb6-194" aria-hidden="true" tabindex="-1"></a><span class="co"># print(credit.loc[credit["loan_status"] == 1, "probability_score"].mean())</span></span>
+<span id="cb6-195"><a href="#cb6-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-196"><a href="#cb6-196" aria-hidden="true" tabindex="-1"></a>BankPnL <span class="op">=</span> creditTest.loc[creditTest[<span class="st">'loan_status'</span>] <span class="op">==</span> <span class="dv">0</span>, <span class="st">'PnL'</span>].mean()</span>
+<span id="cb6-197"><a href="#cb6-197" aria-hidden="true" tabindex="-1"></a>machinePnL <span class="op">=</span> creditTest.loc[creditTest[<span class="st">"loan_status_pred"</span>] <span class="op">==</span> <span class="dv">0</span>, <span class="st">'PnL'</span>].mean()</span>
+<span id="cb6-198"><a href="#cb6-198" aria-hidden="true" tabindex="-1"></a>T <span class="op">=</span> utility.optimalProfitScore(credit, <span class="dv">200</span>, <span class="dv">100</span>, <span class="dv">50</span>)</span>
+<span id="cb6-199"><a href="#cb6-199" aria-hidden="true" tabindex="-1"></a>tresholdPnL <span class="op">=</span> creditTest.loc[creditTest[<span class="st">"probability_score"</span>] <span class="op">&lt;</span> T, <span class="st">"PnL"</span>].mean()</span>
+<span id="cb6-200"><a href="#cb6-200" aria-hidden="true" tabindex="-1"></a>theoreticalPnL <span class="op">=</span> creditTest.loc[creditTest[<span class="st">"PnL"</span>] <span class="op">&gt;</span> <span class="dv">0</span>, <span class="st">"PnL"</span>].mean()</span>
+<span id="cb6-201"><a href="#cb6-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-202"><a href="#cb6-202" aria-hidden="true" tabindex="-1"></a>creditTest[<span class="st">"ALGO_DECISION"</span>] <span class="op">=</span> creditTest[<span class="st">"probability_score"</span>] <span class="op">&lt;</span> T</span>
+<span id="cb6-203"><a href="#cb6-203" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-204"><a href="#cb6-204" aria-hidden="true" tabindex="-1"></a><span class="co">#BANK INVESTIGATION</span></span>
+<span id="cb6-205"><a href="#cb6-205" aria-hidden="true" tabindex="-1"></a><span class="co">#analyzing loan default</span></span>
+<span id="cb6-206"><a href="#cb6-206" aria-hidden="true" tabindex="-1"></a><span class="co">#means</span></span>
+<span id="cb6-207"><a href="#cb6-207" aria-hidden="true" tabindex="-1"></a>meanPopDeafultValue <span class="op">=</span> creditTest[creditTest[<span class="st">"loan_status"</span>] <span class="op">==</span> <span class="dv">1</span>][<span class="st">"PnL"</span>].mean()</span>
+<span id="cb6-208"><a href="#cb6-208" aria-hidden="true" tabindex="-1"></a>meanAlgoSelectDefaultValue <span class="op">=</span> creditTest[(creditTest[<span class="st">"ALGO_DECISION"</span>] <span class="op">==</span> <span class="va">True</span>) <span class="op">&amp;</span> (creditTest[<span class="st">"loan_status"</span>] <span class="op">==</span> <span class="dv">1</span>)][<span class="st">"PnL"</span>].mean()</span>
+<span id="cb6-209"><a href="#cb6-209" aria-hidden="true" tabindex="-1"></a>meanAlgoRejectDefaultValue <span class="op">=</span> creditTest[(creditTest[<span class="st">"ALGO_DECISION"</span>] <span class="op">==</span> <span class="va">False</span>) <span class="op">&amp;</span>  (creditTest[<span class="st">"loan_status"</span>] <span class="op">==</span> <span class="dv">1</span>)][<span class="st">"PnL"</span>].mean()</span>
+<span id="cb6-210"><a href="#cb6-210" aria-hidden="true" tabindex="-1"></a><span class="co">#histograms</span></span>
+<span id="cb6-211"><a href="#cb6-211" aria-hidden="true" tabindex="-1"></a><span class="co">#ALGO accept</span></span>
+<span id="cb6-212"><a href="#cb6-212" aria-hidden="true" tabindex="-1"></a>plt.hist(creditTest[(creditTest[<span class="st">"ALGO_DECISION"</span>] <span class="op">==</span> <span class="va">True</span>) <span class="op">&amp;</span> (creditTest[<span class="st">"loan_status"</span>] <span class="op">==</span> <span class="dv">1</span>)][<span class="st">"PnL"</span>], bins<span class="op">=</span><span class="dv">6</span>, color<span class="op">=</span><span class="st">'green'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)</span>
+<span id="cb6-213"><a href="#cb6-213" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Loan Profit'</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb6-214"><a href="#cb6-214" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Frequency'</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb6-215"><a href="#cb6-215" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Loan Profitability Distriubtion for Algorithm Selections'</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb6-216"><a href="#cb6-216" aria-hidden="true" tabindex="-1"></a>plt.xticks(fontname<span class="op">=</span><span class="st">'Courier'</span>, fontsize<span class="op">=</span><span class="dv">10</span>)  <span class="co"># Change font to Courier</span></span>
+<span id="cb6-217"><a href="#cb6-217" aria-hidden="true" tabindex="-1"></a>plt.yticks(fontname<span class="op">=</span><span class="st">'Courier'</span>, fontsize<span class="op">=</span><span class="dv">10</span>) </span>
+<span id="cb6-218"><a href="#cb6-218" aria-hidden="true" tabindex="-1"></a>plt.grid(<span class="va">True</span>)</span>
+<span id="cb6-219"><a href="#cb6-219" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb6-220"><a href="#cb6-220" aria-hidden="true" tabindex="-1"></a><span class="co">#ALGO reject</span></span>
+<span id="cb6-221"><a href="#cb6-221" aria-hidden="true" tabindex="-1"></a>plt.hist(creditTest[(creditTest[<span class="st">"ALGO_DECISION"</span>] <span class="op">==</span> <span class="va">False</span>) <span class="op">&amp;</span> (creditTest[<span class="st">"loan_status"</span>] <span class="op">==</span> <span class="dv">1</span>)][<span class="st">"PnL"</span>], bins<span class="op">=</span><span class="dv">6</span>, color<span class="op">=</span><span class="st">'green'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)</span>
+<span id="cb6-222"><a href="#cb6-222" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Loan Profit'</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb6-223"><a href="#cb6-223" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Frequency'</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb6-224"><a href="#cb6-224" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Loan Profitability Distriubtion for Algorithm Rejections'</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb6-225"><a href="#cb6-225" aria-hidden="true" tabindex="-1"></a>plt.xticks(fontname<span class="op">=</span><span class="st">'Courier'</span>, fontsize<span class="op">=</span><span class="dv">10</span>)  <span class="co"># Change font to Courier</span></span>
+<span id="cb6-226"><a href="#cb6-226" aria-hidden="true" tabindex="-1"></a>plt.yticks(fontname<span class="op">=</span><span class="st">'Courier'</span>, fontsize<span class="op">=</span><span class="dv">10</span>) </span>
+<span id="cb6-227"><a href="#cb6-227" aria-hidden="true" tabindex="-1"></a>plt.grid(<span class="va">True</span>)</span>
+<span id="cb6-228"><a href="#cb6-228" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb6-229"><a href="#cb6-229" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-230"><a href="#cb6-230" aria-hidden="true" tabindex="-1"></a><span class="co">#print outs</span></span>
+<span id="cb6-231"><a href="#cb6-231" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"DEFAULT"</span>)</span>
+<span id="cb6-232"><a href="#cb6-232" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Population Mean: "</span> <span class="op">+</span> <span class="bu">str</span>(meanPopDeafultValue))</span>
+<span id="cb6-233"><a href="#cb6-233" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Algorithm SELECT Mean: "</span> <span class="op">+</span> <span class="bu">str</span>(meanAlgoSelectDefaultValue))</span>
+<span id="cb6-234"><a href="#cb6-234" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Algorithm REJECT Mean "</span> <span class="op">+</span> <span class="bu">str</span>(meanAlgoRejectDefaultValue))</span>
+<span id="cb6-235"><a href="#cb6-235" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-236"><a href="#cb6-236" aria-hidden="true" tabindex="-1"></a><span class="co">#alayzing loan repayment</span></span>
+<span id="cb6-237"><a href="#cb6-237" aria-hidden="true" tabindex="-1"></a>meanPopRepayValue <span class="op">=</span>  creditTest[creditTest[<span class="st">"loan_status"</span>] <span class="op">==</span> <span class="dv">0</span>][<span class="st">"PnL"</span>].<span class="bu">sum</span>()</span>
+<span id="cb6-238"><a href="#cb6-238" aria-hidden="true" tabindex="-1"></a>meanAlgoSelectRepayValue <span class="op">=</span> creditTest[(creditTest[<span class="st">"ALGO_DECISION"</span>] <span class="op">==</span> <span class="va">True</span>) <span class="op">&amp;</span> (creditTest[<span class="st">"loan_status"</span>] <span class="op">==</span> <span class="dv">0</span>)][<span class="st">"PnL"</span>].mean()</span>
+<span id="cb6-239"><a href="#cb6-239" aria-hidden="true" tabindex="-1"></a>meanAlgoRejectRepayValue <span class="op">=</span> creditTest[(creditTest[<span class="st">"ALGO_DECISION"</span>] <span class="op">==</span> <span class="va">False</span>) <span class="op">&amp;</span> (creditTest[<span class="st">"loan_status"</span>] <span class="op">==</span> <span class="dv">0</span>)][<span class="st">"PnL"</span>].mean()</span>
+<span id="cb6-240"><a href="#cb6-240" aria-hidden="true" tabindex="-1"></a><span class="co">#print outs</span></span>
+<span id="cb6-241"><a href="#cb6-241" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"REPAID"</span>)</span>
+<span id="cb6-242"><a href="#cb6-242" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Population Mean: "</span> <span class="op">+</span> <span class="bu">str</span>(meanPopRepayValue))</span>
+<span id="cb6-243"><a href="#cb6-243" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Algorithm SELECT Mean: "</span> <span class="op">+</span> <span class="bu">str</span>(meanAlgoSelectRepayValue))</span>
+<span id="cb6-244"><a href="#cb6-244" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Algorithm REJECT Mean "</span> <span class="op">+</span> <span class="bu">str</span>(meanAlgoRejectRepayValue))</span>
+<span id="cb6-245"><a href="#cb6-245" aria-hidden="true" tabindex="-1"></a><span class="co">#histograms</span></span>
+<span id="cb6-246"><a href="#cb6-246" aria-hidden="true" tabindex="-1"></a><span class="co">#ALGO accept</span></span>
+<span id="cb6-247"><a href="#cb6-247" aria-hidden="true" tabindex="-1"></a>plt.hist(creditTest[(creditTest[<span class="st">"ALGO_DECISION"</span>] <span class="op">==</span> <span class="va">True</span>) <span class="op">&amp;</span> (creditTest[<span class="st">"loan_status"</span>] <span class="op">==</span> <span class="dv">0</span>)][<span class="st">"PnL"</span>], bins<span class="op">=</span><span class="dv">6</span>, color<span class="op">=</span><span class="st">'green'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)</span>
+<span id="cb6-248"><a href="#cb6-248" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Loan Profit'</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb6-249"><a href="#cb6-249" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Frequency'</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb6-250"><a href="#cb6-250" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Loan Profitability Distriubtion for Algorithm Selections'</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb6-251"><a href="#cb6-251" aria-hidden="true" tabindex="-1"></a>plt.xticks(fontname<span class="op">=</span><span class="st">'Courier'</span>, fontsize<span class="op">=</span><span class="dv">10</span>)  <span class="co"># Change font to Courier</span></span>
+<span id="cb6-252"><a href="#cb6-252" aria-hidden="true" tabindex="-1"></a>plt.yticks(fontname<span class="op">=</span><span class="st">'Courier'</span>, fontsize<span class="op">=</span><span class="dv">10</span>) </span>
+<span id="cb6-253"><a href="#cb6-253" aria-hidden="true" tabindex="-1"></a>plt.grid(<span class="va">True</span>)</span>
+<span id="cb6-254"><a href="#cb6-254" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb6-255"><a href="#cb6-255" aria-hidden="true" tabindex="-1"></a><span class="co">#ALGO reject</span></span>
+<span id="cb6-256"><a href="#cb6-256" aria-hidden="true" tabindex="-1"></a>plt.hist(creditTest[(creditTest[<span class="st">"ALGO_DECISION"</span>] <span class="op">==</span> <span class="va">False</span>) <span class="op">&amp;</span> (creditTest[<span class="st">"loan_status"</span>] <span class="op">==</span> <span class="dv">0</span>)][<span class="st">"PnL"</span>], bins<span class="op">=</span><span class="dv">6</span>, color<span class="op">=</span><span class="st">'green'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)</span>
+<span id="cb6-257"><a href="#cb6-257" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">'Loan Profit'</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb6-258"><a href="#cb6-258" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">'Frequency'</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb6-259"><a href="#cb6-259" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">'Loan Profitability Distriubtion for Algorithm Rejections'</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb6-260"><a href="#cb6-260" aria-hidden="true" tabindex="-1"></a>plt.xticks(fontname<span class="op">=</span><span class="st">'Courier'</span>, fontsize<span class="op">=</span><span class="dv">10</span>)  <span class="co"># Change font to Courier</span></span>
+<span id="cb6-261"><a href="#cb6-261" aria-hidden="true" tabindex="-1"></a>plt.yticks(fontname<span class="op">=</span><span class="st">'Courier'</span>, fontsize<span class="op">=</span><span class="dv">10</span>) </span>
+<span id="cb6-262"><a href="#cb6-262" aria-hidden="true" tabindex="-1"></a>plt.grid(<span class="va">True</span>)</span>
+<span id="cb6-263"><a href="#cb6-263" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb6-264"><a href="#cb6-264" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-265"><a href="#cb6-265" aria-hidden="true" tabindex="-1"></a><span class="co">#Printing Loan Percent of Income by Algorithm Decision Type</span></span>
+<span id="cb6-266"><a href="#cb6-266" aria-hidden="true" tabindex="-1"></a>statusMapping <span class="op">=</span> {<span class="va">True</span>:<span class="st">"Algorithm Select"</span>, <span class="va">False</span>:<span class="st">"Algorithm Reject"</span>}</span>
+<span id="cb6-267"><a href="#cb6-267" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-268"><a href="#cb6-268" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> algo_status <span class="kw">in</span> creditTest[<span class="st">"ALGO_DECISION"</span>].unique():</span>
+<span id="cb6-269"><a href="#cb6-269" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-270"><a href="#cb6-270" aria-hidden="true" tabindex="-1"></a>    plt.hist(creditTest[creditTest[<span class="st">"ALGO_DECISION"</span>] <span class="op">==</span> algo_status][<span class="st">"loan_percent_income"</span>], bins<span class="op">=</span><span class="dv">6</span>, color<span class="op">=</span><span class="st">'skyblue'</span>, edgecolor<span class="op">=</span><span class="st">'black'</span>)</span>
+<span id="cb6-271"><a href="#cb6-271" aria-hidden="true" tabindex="-1"></a>    plt.xlabel(<span class="st">'Loan Percent of Income'</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb6-272"><a href="#cb6-272" aria-hidden="true" tabindex="-1"></a>    plt.ylabel(<span class="st">'Frequency'</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb6-273"><a href="#cb6-273" aria-hidden="true" tabindex="-1"></a>    plt.title(<span class="st">"Loan Percent Income for "</span> <span class="op">+</span> statusMapping[algo_status], font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb6-274"><a href="#cb6-274" aria-hidden="true" tabindex="-1"></a>    plt.xticks(fontname<span class="op">=</span><span class="st">'Courier'</span>, fontsize<span class="op">=</span><span class="dv">10</span>)  <span class="co"># Change font to Courier</span></span>
+<span id="cb6-275"><a href="#cb6-275" aria-hidden="true" tabindex="-1"></a>    plt.yticks(fontname<span class="op">=</span><span class="st">'Courier'</span>, fontsize<span class="op">=</span><span class="dv">10</span>) </span>
+<span id="cb6-276"><a href="#cb6-276" aria-hidden="true" tabindex="-1"></a>    plt.grid(<span class="va">True</span>)</span>
+<span id="cb6-277"><a href="#cb6-277" aria-hidden="true" tabindex="-1"></a>    plt.show()</span>
+<span id="cb6-278"><a href="#cb6-278" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-279"><a href="#cb6-279" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-280"><a href="#cb6-280" aria-hidden="true" tabindex="-1"></a>custom_colors <span class="op">=</span> {<span class="dv">0</span>: <span class="st">"#82C272"</span>, <span class="dv">1</span> :<span class="st">"#0087AC"</span>}</span>
+<span id="cb6-281"><a href="#cb6-281" aria-hidden="true" tabindex="-1"></a>sns.<span class="bu">set</span>(style <span class="op">=</span> <span class="st">'whitegrid'</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb6-282"><a href="#cb6-282" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> key, value <span class="kw">in</span> custom_colors.items():</span>
+<span id="cb6-283"><a href="#cb6-283" aria-hidden="true" tabindex="-1"></a>    custom_colors[key] <span class="op">=</span> value <span class="op">+</span> <span class="st">'80'</span></span>
+<span id="cb6-284"><a href="#cb6-284" aria-hidden="true" tabindex="-1"></a>sns.scatterplot(x <span class="op">=</span> <span class="st">"loan_amnt"</span>, y <span class="op">=</span> <span class="st">"loan_percent_income"</span>, hue <span class="op">=</span> <span class="st">"loan_status"</span>, palette <span class="op">=</span> custom_colors, data <span class="op">=</span> creditTest)</span>
+<span id="cb6-285"><a href="#cb6-285" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Loan Amount vs. Loan Percent Income"</span>)</span>
+<span id="cb6-286"><a href="#cb6-286" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Loan Amount"</span>)</span>
+<span id="cb6-287"><a href="#cb6-287" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Percent of Borrower Income"</span>)</span>
+<span id="cb6-288"><a href="#cb6-288" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb6-289"><a href="#cb6-289" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-290"><a href="#cb6-290" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-291"><a href="#cb6-291" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-292"><a href="#cb6-292" aria-hidden="true" tabindex="-1"></a><span class="co">#generates profit curves and prints out useful metrics</span></span>
+<span id="cb6-293"><a href="#cb6-293" aria-hidden="true" tabindex="-1"></a>utility.generateSampleGraph(credit, <span class="dv">100</span>, <span class="dv">500</span>, T)</span>
+<span id="cb6-294"><a href="#cb6-294" aria-hidden="true" tabindex="-1"></a>utility.generateSampleGraph(creditTest, <span class="dv">100</span>, <span class="dv">500</span>, T)</span>
+<span id="cb6-295"><a href="#cb6-295" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-296"><a href="#cb6-296" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Model Accuracy: %"</span> <span class="op">+</span> <span class="bu">str</span>(accuracy))</span>
+<span id="cb6-297"><a href="#cb6-297" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Bank PnL: $"</span> <span class="op">+</span> <span class="bu">str</span>(BankPnL))</span>
+<span id="cb6-298"><a href="#cb6-298" aria-hidden="true" tabindex="-1"></a><span class="co">#print("Model PnL: $" + str(machinePnL))</span></span>
+<span id="cb6-299"><a href="#cb6-299" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Tresholded PnL: $"</span> <span class="op">+</span> <span class="bu">str</span>(tresholdPnL))</span>
+<span id="cb6-300"><a href="#cb6-300" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Loss: "</span> <span class="op">+</span> <span class="bu">str</span>(tresholdPnL<span class="op">/</span>BankPnL))</span>
+<span id="cb6-301"><a href="#cb6-301" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-302"><a href="#cb6-302" aria-hidden="true" tabindex="-1"></a><span class="co">#DEMOGRAPHIC INVESTIGATION</span></span>
+<span id="cb6-303"><a href="#cb6-303" aria-hidden="true" tabindex="-1"></a>statusMapping <span class="op">=</span> {<span class="va">True</span>:<span class="st">"Algorithm Select"</span>, <span class="va">False</span>:<span class="st">"Algorithm Reject"</span>}</span>
+<span id="cb6-304"><a href="#cb6-304" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-305"><a href="#cb6-305" aria-hidden="true" tabindex="-1"></a><span class="co">#Plotting Loan Status by Intent </span></span>
+<span id="cb6-306"><a href="#cb6-306" aria-hidden="true" tabindex="-1"></a>colors <span class="op">=</span> [<span class="st">"green"</span>, <span class="st">"#82C272"</span>, <span class="st">"#00A88F"</span>, <span class="st">"#0087AC"</span>, <span class="st">"#005FAA"</span>, <span class="st">"#323B81"</span>]</span>
+<span id="cb6-307"><a href="#cb6-307" aria-hidden="true" tabindex="-1"></a>intentMapping <span class="op">=</span> {<span class="dv">0</span>: <span class="st">"Venture"</span>, <span class="dv">1</span>: <span class="st">"Education"</span>, <span class="dv">2</span>: <span class="st">"Medical"</span>, <span class="dv">3</span>: <span class="st">"Home Improvement"</span>, <span class="dv">4</span>: <span class="st">"Personal"</span>, <span class="dv">5</span>: <span class="st">"Debt Consolidation"</span>, <span class="op">-</span><span class="dv">1</span>: <span class="st">"Unknown"</span>}</span>
+<span id="cb6-308"><a href="#cb6-308" aria-hidden="true" tabindex="-1"></a>loan_status_groups <span class="op">=</span> creditTest[<span class="st">"ALGO_DECISION"</span>].unique()</span>
+<span id="cb6-309"><a href="#cb6-309" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(loan_status_groups)</span>
+<span id="cb6-310"><a href="#cb6-310" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> status <span class="kw">in</span> loan_status_groups:</span>
+<span id="cb6-311"><a href="#cb6-311" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> status <span class="op">&lt;</span> <span class="dv">0</span>:</span>
+<span id="cb6-312"><a href="#cb6-312" aria-hidden="true" tabindex="-1"></a>        <span class="cf">break</span></span>
+<span id="cb6-313"><a href="#cb6-313" aria-hidden="true" tabindex="-1"></a>    group_data <span class="op">=</span> creditTest[creditTest[<span class="st">"ALGO_DECISION"</span>] <span class="op">==</span> status]</span>
+<span id="cb6-314"><a href="#cb6-314" aria-hidden="true" tabindex="-1"></a>    category_counts <span class="op">=</span> group_data[<span class="st">"loan_intent"</span>].value_counts()</span>
+<span id="cb6-315"><a href="#cb6-315" aria-hidden="true" tabindex="-1"></a>    labels <span class="op">=</span> [intentMapping.get(x) <span class="cf">for</span> x <span class="kw">in</span> category_counts.index]</span>
+<span id="cb6-316"><a href="#cb6-316" aria-hidden="true" tabindex="-1"></a>    sizes <span class="op">=</span> category_counts.values</span>
+<span id="cb6-317"><a href="#cb6-317" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-318"><a href="#cb6-318" aria-hidden="true" tabindex="-1"></a>    plt.figure()</span>
+<span id="cb6-319"><a href="#cb6-319" aria-hidden="true" tabindex="-1"></a>    pie <span class="op">=</span> plt.pie(sizes, labels <span class="op">=</span> labels, autopct<span class="op">=</span><span class="st">"</span><span class="sc">%1.1f%%</span><span class="st">"</span>, startangle <span class="op">=</span> <span class="dv">140</span>, colors <span class="op">=</span> colors)</span>
+<span id="cb6-320"><a href="#cb6-320" aria-hidden="true" tabindex="-1"></a>    plt.title(<span class="st">"Intent Breakdown for "</span> <span class="op">+</span> <span class="bu">str</span>(statusMapping[status]) <span class="op">+</span> <span class="st">" Loans"</span>, fontname <span class="op">=</span> <span class="st">"Courier"</span>, fontsize <span class="op">=</span> <span class="dv">14</span>)</span>
+<span id="cb6-321"><a href="#cb6-321" aria-hidden="true" tabindex="-1"></a>    <span class="co">#make pretty</span></span>
+<span id="cb6-322"><a href="#cb6-322" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> text <span class="kw">in</span> pie[<span class="dv">1</span>]:</span>
+<span id="cb6-323"><a href="#cb6-323" aria-hidden="true" tabindex="-1"></a>        text.set_fontname(<span class="st">"Courier"</span>)</span>
+<span id="cb6-324"><a href="#cb6-324" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb6-325"><a href="#cb6-325" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb6-326"><a href="#cb6-326" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-327"><a href="#cb6-327" aria-hidden="true" tabindex="-1"></a><span class="co">#PIE #3</span></span>
+<span id="cb6-328"><a href="#cb6-328" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-329"><a href="#cb6-329" aria-hidden="true" tabindex="-1"></a><span class="co">#Plotting Loan Status by Ownership tyoe</span></span>
+<span id="cb6-330"><a href="#cb6-330" aria-hidden="true" tabindex="-1"></a>colors <span class="op">=</span> [ <span class="st">"#82C272"</span>, <span class="st">"#00A88F"</span>, <span class="st">"#0087AC"</span>, <span class="st">"#005FAA"</span>, <span class="st">"#323B81"</span>]</span>
+<span id="cb6-331"><a href="#cb6-331" aria-hidden="true" tabindex="-1"></a>ownershipMapping <span class="op">=</span> {<span class="dv">0</span>: <span class="st">"MORTGAGE"</span>, <span class="dv">1</span>: <span class="st">"OWN"</span>, <span class="dv">2</span>: <span class="st">"RENT"</span>, <span class="dv">3</span>: <span class="st">"OTHER"</span>, <span class="op">-</span><span class="dv">1</span> : <span class="st">"Unknown"</span>}</span>
+<span id="cb6-332"><a href="#cb6-332" aria-hidden="true" tabindex="-1"></a>loan_status_groups <span class="op">=</span> creditTest[<span class="st">"ALGO_DECISION"</span>].unique()</span>
+<span id="cb6-333"><a href="#cb6-333" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> status <span class="kw">in</span> loan_status_groups:</span>
+<span id="cb6-334"><a href="#cb6-334" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> status <span class="op">&lt;</span> <span class="dv">0</span>:</span>
+<span id="cb6-335"><a href="#cb6-335" aria-hidden="true" tabindex="-1"></a>        <span class="cf">break</span></span>
+<span id="cb6-336"><a href="#cb6-336" aria-hidden="true" tabindex="-1"></a>    group_data <span class="op">=</span> creditTest[creditTest[<span class="st">"ALGO_DECISION"</span>] <span class="op">==</span> status]</span>
+<span id="cb6-337"><a href="#cb6-337" aria-hidden="true" tabindex="-1"></a>    category_counts <span class="op">=</span> group_data[<span class="st">"person_home_ownership"</span>].value_counts().sort_index()</span>
+<span id="cb6-338"><a href="#cb6-338" aria-hidden="true" tabindex="-1"></a>    labels <span class="op">=</span> [ownershipMapping.get(x) <span class="cf">for</span> x <span class="kw">in</span> category_counts.index]</span>
+<span id="cb6-339"><a href="#cb6-339" aria-hidden="true" tabindex="-1"></a>    sizes <span class="op">=</span> category_counts.values</span>
+<span id="cb6-340"><a href="#cb6-340" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-341"><a href="#cb6-341" aria-hidden="true" tabindex="-1"></a>    plt.figure()</span>
+<span id="cb6-342"><a href="#cb6-342" aria-hidden="true" tabindex="-1"></a>    pie <span class="op">=</span> plt.pie(sizes, labels <span class="op">=</span> labels, autopct<span class="op">=</span><span class="st">"</span><span class="sc">%1.1f%%</span><span class="st">"</span>, startangle <span class="op">=</span> <span class="dv">140</span>, colors <span class="op">=</span> colors)</span>
+<span id="cb6-343"><a href="#cb6-343" aria-hidden="true" tabindex="-1"></a>    plt.title(<span class="st">"Home Ownership Breakdown for "</span> <span class="op">+</span> <span class="bu">str</span>(statusMapping[status]) <span class="op">+</span> <span class="st">" Loans"</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb6-344"><a href="#cb6-344" aria-hidden="true" tabindex="-1"></a>     <span class="co">#make pretty</span></span>
+<span id="cb6-345"><a href="#cb6-345" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> text <span class="kw">in</span> pie[<span class="dv">1</span>]:</span>
+<span id="cb6-346"><a href="#cb6-346" aria-hidden="true" tabindex="-1"></a>        text.set_fontname(<span class="st">"Courier"</span>)</span>
+<span id="cb6-347"><a href="#cb6-347" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-348"><a href="#cb6-348" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb6-349"><a href="#cb6-349" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-350"><a href="#cb6-350" aria-hidden="true" tabindex="-1"></a><span class="co">#PIE #4</span></span>
+<span id="cb6-351"><a href="#cb6-351" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-352"><a href="#cb6-352" aria-hidden="true" tabindex="-1"></a><span class="co">#Plotting Loan Status by Ownership tyoe</span></span>
+<span id="cb6-353"><a href="#cb6-353" aria-hidden="true" tabindex="-1"></a>statusMapping <span class="op">=</span> {<span class="dv">0</span>: <span class="st">"Repaid"</span>, <span class="dv">1</span>: <span class="st">"Defaulted"</span>}</span>
+<span id="cb6-354"><a href="#cb6-354" aria-hidden="true" tabindex="-1"></a>colors <span class="op">=</span> [<span class="st">"green"</span>, <span class="st">"#82C272"</span>, <span class="st">"#00A88F"</span>, <span class="st">"#0087AC"</span>, <span class="st">"#005FAA"</span>, <span class="st">"#323B81"</span>]</span>
+<span id="cb6-355"><a href="#cb6-355" aria-hidden="true" tabindex="-1"></a>ownershipMapping <span class="op">=</span> {<span class="dv">0</span>: <span class="st">"MORTGAGE"</span>, <span class="dv">1</span>: <span class="st">"OWN"</span>, <span class="dv">2</span>: <span class="st">"RENT"</span>, <span class="dv">3</span>: <span class="st">"OTHER"</span>, <span class="op">-</span><span class="dv">1</span> : <span class="st">"Unknown"</span>}</span>
+<span id="cb6-356"><a href="#cb6-356" aria-hidden="true" tabindex="-1"></a>loan_status_groups <span class="op">=</span> creditTest[<span class="st">"loan_status"</span>].unique()</span>
+<span id="cb6-357"><a href="#cb6-357" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> status <span class="kw">in</span> loan_status_groups:</span>
+<span id="cb6-358"><a href="#cb6-358" aria-hidden="true" tabindex="-1"></a>    group_data <span class="op">=</span> creditTest[creditTest[<span class="st">"loan_status"</span>] <span class="op">==</span> status]</span>
+<span id="cb6-359"><a href="#cb6-359" aria-hidden="true" tabindex="-1"></a>    category_counts <span class="op">=</span> group_data[<span class="st">"person_home_ownership"</span>].value_counts().sort_index()</span>
+<span id="cb6-360"><a href="#cb6-360" aria-hidden="true" tabindex="-1"></a>    labels <span class="op">=</span> [ownershipMapping.get(x) <span class="cf">for</span> x <span class="kw">in</span> category_counts.index]</span>
+<span id="cb6-361"><a href="#cb6-361" aria-hidden="true" tabindex="-1"></a>    sizes <span class="op">=</span> category_counts.values</span>
+<span id="cb6-362"><a href="#cb6-362" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-363"><a href="#cb6-363" aria-hidden="true" tabindex="-1"></a>    plt.figure()</span>
+<span id="cb6-364"><a href="#cb6-364" aria-hidden="true" tabindex="-1"></a>    pie <span class="op">=</span> plt.pie(sizes, labels <span class="op">=</span> labels, autopct<span class="op">=</span><span class="st">"</span><span class="sc">%1.1f%%</span><span class="st">"</span>, startangle <span class="op">=</span> <span class="dv">140</span>, colors <span class="op">=</span> colors)</span>
+<span id="cb6-365"><a href="#cb6-365" aria-hidden="true" tabindex="-1"></a>    plt.title(<span class="st">"Home Ownership Breakdown for "</span> <span class="op">+</span> <span class="bu">str</span>(statusMapping[status]) <span class="op">+</span> <span class="st">" Loans"</span>, font <span class="op">=</span> <span class="st">"Courier"</span>)</span>
+<span id="cb6-366"><a href="#cb6-366" aria-hidden="true" tabindex="-1"></a>     <span class="co">#make pretty</span></span>
+<span id="cb6-367"><a href="#cb6-367" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> text <span class="kw">in</span> pie[<span class="dv">1</span>]:</span>
+<span id="cb6-368"><a href="#cb6-368" aria-hidden="true" tabindex="-1"></a>        text.set_fontname(<span class="st">"Courier"</span>)</span>
+<span id="cb6-369"><a href="#cb6-369" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-370"><a href="#cb6-370" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb6-371"><a href="#cb6-371" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-372"><a href="#cb6-372" aria-hidden="true" tabindex="-1"></a><span class="co">#Plotting Age</span></span>
+<span id="cb6-373"><a href="#cb6-373" aria-hidden="true" tabindex="-1"></a>age_bins <span class="op">=</span> [<span class="dv">18</span>, <span class="dv">25</span>, <span class="dv">35</span>, <span class="dv">45</span>, <span class="dv">55</span>, <span class="dv">65</span>, <span class="bu">float</span>(<span class="st">"inf"</span>)]</span>
+<span id="cb6-374"><a href="#cb6-374" aria-hidden="true" tabindex="-1"></a>age_labels <span class="op">=</span> [<span class="st">"18-24"</span>, <span class="st">"25-34"</span>, <span class="st">"35-44"</span>, <span class="st">"45-54"</span>, <span class="st">"55-64"</span>, <span class="st">"65+"</span>]</span>
+<span id="cb6-375"><a href="#cb6-375" aria-hidden="true" tabindex="-1"></a>creditTest[<span class="st">"ALGO_DECISION"</span>] <span class="op">=</span> creditTest[<span class="st">"ALGO_DECISION"</span>].astype(<span class="bu">int</span>)</span>
+<span id="cb6-376"><a href="#cb6-376" aria-hidden="true" tabindex="-1"></a>creditTest[<span class="st">"person_age"</span>] <span class="op">=</span> pd.cut(creditTest[<span class="st">"person_age"</span>], bins <span class="op">=</span> age_bins, labels <span class="op">=</span> age_labels, right<span class="op">=</span> <span class="va">False</span>)</span>
+<span id="cb6-377"><a href="#cb6-377" aria-hidden="true" tabindex="-1"></a>percentage_by_age_group <span class="op">=</span> creditTest.groupby(<span class="st">"person_age"</span>)[<span class="st">"ALGO_DECISION"</span>].mean() <span class="op">*</span> <span class="dv">100</span></span>
+<span id="cb6-378"><a href="#cb6-378" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-379"><a href="#cb6-379" aria-hidden="true" tabindex="-1"></a>percentage_by_age_group.plot(kind <span class="op">=</span> <span class="st">"bar"</span>, color <span class="op">=</span> <span class="st">"blue"</span>)</span>
+<span id="cb6-380"><a href="#cb6-380" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Loan Selection Percent by Age Group"</span>)</span>
+<span id="cb6-381"><a href="#cb6-381" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Age Group"</span>)</span>
+<span id="cb6-382"><a href="#cb6-382" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Selection Percent"</span>)</span>
+<span id="cb6-383"><a href="#cb6-383" aria-hidden="true" tabindex="-1"></a>plt.xticks(rotation <span class="op">=</span> <span class="dv">45</span>)</span>
+<span id="cb6-384"><a href="#cb6-384" aria-hidden="true" tabindex="-1"></a>plt.ylim(<span class="dv">0</span>, <span class="dv">100</span>)</span>
+<span id="cb6-385"><a href="#cb6-385" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb6-386"><a href="#cb6-386" aria-hidden="true" tabindex="-1"></a>plt.show()</span>
+<span id="cb6-387"><a href="#cb6-387" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-388"><a href="#cb6-388" aria-hidden="true" tabindex="-1"></a><span class="co">#Plotting by Intent</span></span>
+<span id="cb6-389"><a href="#cb6-389" aria-hidden="true" tabindex="-1"></a>intentMapping <span class="op">=</span> {<span class="dv">0</span>: <span class="st">"Venture"</span>, <span class="dv">1</span>: <span class="st">"Education"</span>, <span class="dv">2</span>: <span class="st">"Medical"</span>, <span class="dv">3</span>: <span class="st">"Home Improvement"</span>, <span class="dv">4</span>: <span class="st">"Personal"</span>, <span class="dv">5</span>: <span class="st">"Debt Consolidation"</span>, <span class="op">-</span><span class="dv">1</span>: <span class="st">"Unknown"</span>}</span>
+<span id="cb6-390"><a href="#cb6-390" aria-hidden="true" tabindex="-1"></a>creditTest[<span class="st">"loan_intent"</span>] <span class="op">=</span> creditTest[<span class="st">"loan_intent"</span>].<span class="bu">map</span>(intentMapping)</span>
+<span id="cb6-391"><a href="#cb6-391" aria-hidden="true" tabindex="-1"></a>creditTest[<span class="st">"ALGO_DECISION"</span>] <span class="op">=</span> creditTest[<span class="st">"ALGO_DECISION"</span>].astype(<span class="bu">int</span>)</span>
+<span id="cb6-392"><a href="#cb6-392" aria-hidden="true" tabindex="-1"></a>percentage_by_age_group <span class="op">=</span> creditTest.groupby(<span class="st">"loan_intent"</span>)[<span class="st">"ALGO_DECISION"</span>].mean() <span class="op">*</span> <span class="dv">100</span></span>
+<span id="cb6-393"><a href="#cb6-393" aria-hidden="true" tabindex="-1"></a>percentage_by_age_group.plot(kind <span class="op">=</span> <span class="st">"bar"</span>, color <span class="op">=</span> <span class="st">"blue"</span>)</span>
+<span id="cb6-394"><a href="#cb6-394" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Selection Percent by Loan Intent"</span>)</span>
+<span id="cb6-395"><a href="#cb6-395" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Loan Intent"</span>)</span>
+<span id="cb6-396"><a href="#cb6-396" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Selection Percent"</span>)</span>
+<span id="cb6-397"><a href="#cb6-397" aria-hidden="true" tabindex="-1"></a>plt.xticks(rotation <span class="op">=</span> <span class="dv">45</span>)</span>
+<span id="cb6-398"><a href="#cb6-398" aria-hidden="true" tabindex="-1"></a>plt.ylim(<span class="dv">0</span>, <span class="dv">100</span>)</span>
+<span id="cb6-399"><a href="#cb6-399" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb6-400"><a href="#cb6-400" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 
 
 </section>
