@@ -6,6 +6,23 @@ import matplotlib.pyplot as plt
 
 plt.rcParams['font.family'] = "Courier"
 
+def train_logistic(X, y, alpha, beta, epsilon, LR):
+    """
+    Takes a feature matrix X, labels y, parameters, and a LogisticRegressionOptimizer.
+    Iterates till loss is epsilon-tolerable.
+    Returns number of iterations to converge and loss at each iteration. 
+    """
+    L = LR.loss(X, y)
+    loss = []
+    step = 0
+
+    while(torch.norm(LR.grad(X, y, LR.score(X))) > epsilon):
+        LR.gradientDescentOptimizer(X, y, alpha, beta)
+        L = LR.loss(X, y)
+        loss.append(L)
+        step += 1
+
+    return [step, loss]
 
 def classification_data(n_points, noise, p_dims):
     #generates test data for LR model
@@ -26,19 +43,19 @@ def draw_line(w, x_min, x_max, ax, **kwargs):
 
 #PART I
 #initialize model and test data
-n = 50
+"""
+n = 100
 p = 2
-gamma = .25
+gamma = .12
 X, y = classification_data(n, gamma, p)
 LR = L.LogisticRegression()
 LR.w = None
 alpha = .5
 beta = .25
-epsilon = .4
+epsilon = .01
 
-""""
-res = LR.gradientDescentOptimizer(X, y, alpha, beta, epsilon)
-w = res[0]
+res = train_logistic(X, y, alpha, beta, epsilon, LR)
+w = LR.w
 #plotting decision boundary
 plt.scatter(X[:,0], X[:, 1], c = y, cmap = "coolwarm")
 draw_line(w, -2, 2.5, plt, color = "red", linestyle = "dashed", label = "Decision Boundary")
@@ -48,56 +65,62 @@ plt.ylabel("Feature 1")
 plt.title("Test Points")
 plt.show()
 #plotting loss over iterations
-[iterations, loss] = res[1]
+[num_iters, loss] = res
+print(loss)
+i = torch.arange(0, num_iters)
 print(loss) 
-print(iterations)
-plt.plot(iterations, loss, color = "red")
+plt.plot(i, loss, color = "red")
 plt.xlabel("Iterations")
 plt.ylabel("Loss")
 plt.title("Model Loss Over Iterations")
 plt.show()
-"""
 
 #PART II
 #calling Vanilla LR
 n = 100
-p = 2
-gamma = .5
-alpha = .25
+p = 10
+gamma = .25
+alpha = .1
 beta = 0
-epsilon = .5
+epsilon = .01
 X, y = classification_data(n, gamma, p)
 LR = L.LogisticRegression()
-res = LR.gradientDescentOptimizer(X, y, alpha, beta, epsilon)
+res = train_logistic(X, y, alpha, beta, epsilon, LR)
 #Reset and call Spicy LR
 LR.w = None
-beta = .9
+beta = .75
 print("calling res momentum")
-res_momentum = LR.gradientDescentOptimizer(X, y, alpha, beta, epsilon)
-
-[iterations, loss] = res[1]
-[iterations_momentum, loss_momentum] = res_momentum[1]
-print(iterations)
-print(iterations_momentum)
-plt.plot(iterations, loss, color = "red", label = "Vanilla")
-plt.plot(iterations_momentum, loss_momentum, color = "Blue", label = "Momentum")
+res_momentum = train_logistic(X, y, alpha, beta, epsilon, LR)
+#plotting
+[num_iters, loss] = res
+[num_iters_momentum, loss_momentum] = res_momentum
+iters = torch.arange(0, num_iters)
+iters_momentum = torch.arange(0, num_iters_momentum)
+plt.plot(iters, loss, color = "red", label = "Vanilla")
+plt.plot(iters_momentum, loss_momentum, color = "Blue", label = "Momentum")
 plt.xlabel("Iterations")
 plt.ylabel("Loss")
 plt.title("Model Loss Over Iterations")
 plt.legend()
 plt.show()
 
+"""
 #PART III
 #initialize parameters
 beta = .25
-n = 40
-p = 75
+n = 50
+p = 100
+gamma = .5
+alpha = .1
+beta = .5
+epsilon = .01
+LR = L.LogisticRegression()
 #generate training and testing data
 X_test, y_test = classification_data(n, gamma, p)
 while True:
     X_train, y_train = classification_data(n, gamma, p)
-    res = LR.gradientDescentOptimizer(X_train, y_train, alpha, beta, epsilon)
-    pred = (torch.matmul(X_train, LR.w) > 0).int()
+    res = train_logistic(X_train, y_train, alpha, beta, epsilon, LR)
+    pred = LR.predict(X_train)
     matching_count = torch.sum(y_train == pred).item()
     percentage_match = (matching_count / len(pred))
     if (percentage_match == 1):

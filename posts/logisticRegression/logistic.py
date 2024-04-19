@@ -1,6 +1,4 @@
 import torch
-import pandas as pd
-import math
 
 class LinearModel:
     #Score and predict
@@ -20,10 +18,15 @@ class LinearModel:
     def predict(self, X):
         #positive prediction iff score > 0 . Returns preditions, y_hat
         score_vector = self.score(X)
+        #r = torch.where(score_vector >= 0, torch.tensor(1.0), torch.tensor(0.0))
         return (score_vector > 0).int()
     
 class LogisticRegression(LinearModel):
 
+    def __init__(self):
+        super().__init__()
+        self.w_prev = None
+        self.w_next = None
 
     def sigmoid(self, s):
       #vectorized sigmoid function
@@ -34,43 +37,58 @@ class LogisticRegression(LinearModel):
         #assume X are the feautres and y the true values.
         #computes loss
         s = self.score(X) #get scores
-        y_ = 2 * y - 1 #convert y to {-1, 1}
-        s = self.sigmoid(s) #apply sigmoid function to input score
-        return torch.mean(-1 * y_ * torch.log(s) - (1 - y_)*torch.log(1 - s)) #calculate loss
+        return torch.mean(-1 * y * torch.log(self.sigmoid(s)) - (1 - y)*torch.log(1 - self.sigmoid(s))) #calculate loss
     
-    def grad(self, X, y):
+    def grad(self, X, y, s):
         #computes the gradient
         n = X.shape[0]
-        s = self.score(X)#get the score
-        y_ = 2 * y - 1 #transform labels to {-1 , 1}
-        return (1/n) * torch.sum((X * (self.sigmoid(s) - y_).unsqueeze(1)), dim = 0) #calculate gradient (one liner!)
+        return (1/n) * torch.sum((X * (self.sigmoid(s) - y).unsqueeze(1)), dim = 0) #calculate gradient (one liner!)
 
-    def gradientDescentOptimizer(self, X, y, alpha, beta, epsilon):
+    def gradientDescentOptimizer(self, X, y, alpha, beta):
         #spicy gradient descent
-        w_prev = torch.zeros(X.shape[1]) # w_{k - 1}
-        w_next = torch.zeros(X.shape[1]) #w_{k + 1}
-        self.score(X) #initialize score for w
-        #TESTING PARAMS
-        k = 0
-        i = []
-        loss = []
-        while (torch.norm(self.grad(X, y)) > epsilon): #(self.loss(X, y) > epsilon): #(torch.norm(self.grad(X, y)) > epsilon)
-            #TESTING PARAMS
-            k = k + 1
-            i.append(k)
-            #print(self.loss(X, y).item())
-            loss.append(self.loss(X, y).item())
-            #DESCENT
-            w_next = self.w - alpha * self.grad(X, y) + beta * (self.w - w_prev) #update
-            w_prev = self.w #reassign
-            self.w = w_next
-
-        return [self.w, [i, loss]]
-
+        if self.w_prev == None:
+            self.w_prev = torch.zeros(X.shape[1]) # w_{k - 1}
         
+        if self.w_next == None:
+            self.w_next = torch.zeros(X.shape[1]) #w_{k + 1}
+        
+        s = self.score(X) #initialize score for w
+        self.w_next = self.w - alpha * self.grad(X, y, s) + beta * (self.w - self.w_prev) #update
+        self.w_prev = self.w #reassign
+        self.w = self.w_next
 
+class Utility:
 
+    def train_logistic(X, y, alpha, beta, epsilon, LR):
+        """
+        Takes a feature matrix X, labels y, parameters, and a LogisticRegressionOptimizer.
+        Iterates till loss is epsilon-tolerable.
+        Returns number of iterations to converge and loss at each iteration. 
+        """
+        L = LR.loss(X, y)
+        loss = []
+        step = 0
 
+        while(torch.norm(LR.grad(X, y, LR.score(X))) > epsilon):
+            LR.gradientDescentOptimizer(X, y, alpha, beta)
+            L = LR.loss(X, y)
+            loss.append(L)
+            step += 1
 
-
+        return [step, loss]
     
+    def classification_data(n_points, noise, p_dims):
+        #generates test data for LR model
+        #To run: classification_data(n_points = 300, noise = 0.2, p_dims = 2):
+        y = torch.arange(n_points) >= int(n_points/2)
+        y = 1.0*y
+        X = y[:, None] + torch.normal(0.0, noise, size = (n_points,p_dims))
+        X = torch.cat((X, torch.ones((X.shape[0], 1))), 1)
+            
+        return X, y
+    
+    def draw_line(w, x_min, x_max, ax, **kwargs):
+        w_ = w.flatten()
+        x = torch.linspace(x_min, x_max, 101)
+        y = -1 * w[0]/w[1] * x + .75
+        l = ax.plot(x, y, **kwargs)
