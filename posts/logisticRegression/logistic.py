@@ -32,7 +32,6 @@ class LogisticRegression(LinearModel):
       #vectorized sigmoid function
       return (1 + torch.exp(-1 * s)).pow_(-1)
 
-    
     def loss(self, X, y):
         #assume X are the feautres and y the true values.
         #computes loss
@@ -76,6 +75,24 @@ class Utility:
             step += 1
 
         return [step, loss]
+    
+    def train_logistic_with_test(X_train, y_train, X_test, y_test, alpha, beta, epsilon, LR):
+        """
+        Takes two sets of feature matrix X and corresponding labels y.
+        Trains the model on X_train and y_train, and records the loss
+        of the weight vector at iteration k of both train and test sets.
+        """
+        train_loss = []
+        test_loss = []
+        step = 0
+
+        while(torch.norm(LR.grad(X_train, y_train, LR.score(X_train))) > epsilon):
+            LR.gradientDescentOptimizer(X_train, y_train, alpha, beta)
+            train_loss.append(LR.loss(X_train, y_train))
+            test_loss.append(LR.loss(X_test, y_test))
+            step += 1
+
+        return [step, train_loss, test_loss]
     
     def classification_data(n_points, noise, p_dims):
         #generates test data for LR model
