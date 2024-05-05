@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/AdamAlgorithm/notebook.html",
       "/posts/NewtonMethod/index.html",
       "/posts/logisticRegression/notebook.html",
       "/posts/WomenInDataScience/index.html",
