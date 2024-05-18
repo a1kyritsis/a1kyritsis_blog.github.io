@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/FlipTrading/index.html",
       "/posts/AdamAlgorithm/notebook.html",
       "/posts/NewtonMethod/index.html",
       "/posts/logisticRegression/notebook.html",
