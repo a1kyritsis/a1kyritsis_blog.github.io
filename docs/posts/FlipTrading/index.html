@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.551">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Alec Kyritsis">
+<meta name="dcterms.date" content="2024-05-17">
+<meta name="description" content="Implementing Flip Trading with Logistic Regression, Featuring Mapping, and Technical Indicators.">
+
+<title>My Awesome CSCI 0451 Blog - Flip Trading</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+
+      .quarto-title-block .quarto-title-banner h1,
+      .quarto-title-block .quarto-title-banner h2,
+      .quarto-title-block .quarto-title-banner h3,
+      .quarto-title-block .quarto-title-banner h4,
+      .quarto-title-block .quarto-title-banner h5,
+      .quarto-title-block .quarto-title-banner h6
+      {
+        color: white;
+      }
+
+      .quarto-title-block .quarto-title-banner {
+        color: white;
+background-image: url(../../img/landscape.png);
+background-size: cover;
+      }
+</style>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed fullcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">My Awesome CSCI 0451 Blog</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/"> <i class="bi bi-github" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com"> <i class="bi bi-twitter" role="img">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+          <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Flip Trading</h1>
+                  <div>
+        <div class="description">
+          Implementing Flip Trading with Logistic Regression, Featuring Mapping, and Technical Indicators.
+        </div>
+      </div>
+                </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p>Alec Kyritsis </p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">May 17, 2024</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="abstract" class="level2">
+<h2 class="anchored" data-anchor-id="abstract">Abstract</h2>
+<p>For our final project Alec and I decided to try our hand at one of the most difficult/lucrative quantitative problems in the world, predicting the stock market. To make our life easier we chose to simplify the problem slightly and only try to predict the direction a stocks price would move, rather than predicting the magnitude and direction of the move. This not only simplified the format and type of our model, but also the practical analysis of how well our predictions work on the stock market. Coming into the project we had four different market models we wanted to try with 4 different variations in the size and number of predictive features we used. The four market models we examined were a single model trained on the entire market, a single model trained only on the companies who rank in the bottom third of volatility, a model trained individually for each company in the entire market, and a model trained individually for each company in the bottom third of volatility. For each of these set ups we explored the results of training on one year of data versus two years versus one year with polynomial feature mapping versus two years with polynomial feature mapping. Before we actually coded the various models, we hypothesized that our low volatility models would perform more consistently than the entire market, and that our models trained and tested for specific companies would perform better than the single models trained on the entire/partial market.</p>
+<p>In the code, text, and analysis that follows we will explore our journey gathering and cleaning data, developing feature functions to transform our data, creating our code framework, running the models, and analyzing the quantitative results/trends.</p>
+</section>
+<section id="introduction" class="level1">
+<h1>Introduction</h1>
+<p>A classic prediction problem is forecasting in financial markets. Given some set of stocks, can we predict their price tommorow? With the amount of data on markets, this should be an easy task. However, since the inception of stock exchanges individuals have been trying-and failing. Even the great mathematician Isacc Newton tried his hand at the stock market, remarking that “I can calculate the movement of the stars, but not the madness of men.”</p>
+<p>Around the mid 20th century, finance began to take an a more formal academic tone as mathematical concepts were integrated into the decipline. Fischer Black and Myron Scholes described a method for determining the fair price of a call option. Harry Markowitz developed “Mean Variance Analysis,” which converted portfolio analysis into a traditional optimization problem. In the late 90’s, Fischer Black and Robert Litterman utilized Bayesian statistics as a means to integrate historic market data with investor forecasts, pioneering the Black-Litterman model. Unsuprisingly, as machine learning methods made their way out of academia and into mainstream use, finance was one of the first fields to pick them up. These methods have proven so disruptive to the dicipline that they have spawned their own sub-field: quantitative finance (“quant funds”).</p>
+<p>Despite the copious amount of data on modern markets and acessiability of modern M-L techniques, forecasting actual percent changes in any asset is hard. For a single asset, there are a near infinite number of values that it could take on over a single time frame. If we put this in the context of a modest portfolio of assets, then a probability of success becomes even smaller. Regression can facilitate more sophisticated market strategies, but it comes at the cost of a baseline level of precision. Hence, to make things easier, we reduce a regression problem to a classification problem. Rather than the predict the actual price movement of a given asset, we only need to predict three things: Whether it will go up, go down, or we are unsure. If we can do this, then we can buy the stock when we think it will go up, short the stock (sell then buy back) when we think it will go down, and get rid of it if we are unsure. This is called flip trading.</p>
+<p>In this blog post, we will demonstrate how to implement a flip trading model using logistic regression, feature mapping, and some basic financial indicators. We then test the model on daily, chinse market data from 2017 - 2022. Hence, without further delay, let go attempt to calculate the madness of men.</p>
+</section>
+<section id="data-collection" class="level1">
+<h1>Data Collection</h1>
+<p>Arguably the hardest part of this project was collecting the data, transferring it into a file format that is easily accessible, and then creating functions that can be easily and functionally used. Our data set is made up of 4,752 companies in China. Each companies has 21 years worth of daily data for 28 different metrics. In total that is over 670,000,000 data points. We saved each of the different metrics as CSV files composed of DataFrames holding all the values for each company over 21 years. All of the raw data was generously provided to us by Professor Scott Smallwood, who runs a quantitative trading fund. His fund paid for this data through a stock broker agency. Below we will explore some of the functions we used to access the data and transform it into useful features.</p>
+</section>
+<section id="functions-and-financials" class="level1">
+<h1>Functions and Financials</h1>
+<p>The first function in our function.py file is called “loaddata”. As parameters it takes the shortened name of our of our companies metrics, a start date, and an end date. After we feed it the inputs it opens up the designated CSV file and creates/returns a dataframe to store all of the data. This was probably the most used function in our entire project.</p>
+<p>The next function we built out transforms price data into a MACD indicator. As we discussed above, the moving average convergence/divergence indicator is on of the most popular indicators in the world for trading. This function takes in price data, a specified length for the long and short exponential moving average, and the period length for an exponential moving average of the difference between our long and short ema curves. Fortunately, pandas DataFrames have a built in exponential moving average function, so the majority of the MACD is easy to calculate. We will show how the MACD indicator can be used as an indicator for stock trading.</p>
+<p>If anyone is interested in learning more about this stock indicator I have attached a link to a basic overview: https://www.investopedia.com/terms/m/macd.asp</p>
+<p>The last function we use in our model is called the Relative Strength Indicator or RSI for short. This indicator measures whether a stock is “overbought” or “oversold” allow traditional trader gain insights into incoming trends in the market. Because of the format of our data, this version of rsi is slightly modified to allow for a shorter time frame of data, however, because of this the first 15-20 RSI values might not the most significant. In fact, most RSI indicators take a while to “warm up” before there prediction is considered “good”. For more information about the RSI indicator you can read the article from this link: https://www.investopedia.com/terms/r/rsi.asp</p>
+</section>
+<section id="baseline-model" class="level1">
+<h1>Baseline Model</h1>
+<p>In order to try an evaluate the various models we are going to explore later in this blog post we must first set a base line to compare our results to. To do this we will take our MACD indicator, apply it to every company over a set period of time, and buy/sell the stock depending on if the MACD is positive or negative.</p>
+</section>
+<section id="our-model" class="level1">
+<h1>Our Model</h1>
+<p>After developing a baseline model along with a series of useful functions and indicators we can start to build out our initial models using the indicators/features discussed above. Below we will walk through the model function and explore how its functionality changes depending on it parameters.</p>
+<p>Link to code: https://github.com/Astro2024/Astro2024.github.io/blob/main/posts/final-project/simple_model.py</p>
+<section id="helper-functions" class="level2">
+<h2 class="anchored" data-anchor-id="helper-functions">Helper Functions</h2>
+<p>Before we even reach the model we need to define two functions. The first records whether or not a value is positive, negative, or zero. We use this function to create our labels for the Logistic Regression. The second function returns the ln value of an element of an array. We need to define this function to reduce the volume, which tends to be vary large, down to log space so the models weights are more manageable and less likely to have floating point errors.</p>
+</section>
+<section id="parameters" class="level2">
+<h2 class="anchored" data-anchor-id="parameters">Parameters</h2>
+<p>Our model function takes 8 different parameters:</p>
+<p>The first four are pretty self explanatory. They are int values, formatted as “year + month + day”, that define our training period and testing period. In the example above we would be training the model on the entirety of 2018 then evaluating the models success on the entirety of 2019.</p>
+<p>The next three parameters define what type of model we want. “total_market” decides whether the model will be looking at every company in the market (True) or just the “low volatility” companies (False). “individual” lets us choose whether we want multiple models trained and evaluated individually on each company, or a singular model trained across what ever market we specified in the previous parameter. “polynomial_features” defines the degree of polynomial feature mapping for our feature matrix.</p>
+<p>The last parameter is solely for practical use in this blog post. It toggles whether the function will print out results or return them.</p>
+<p>Now that we have an understanding of the parameters, let’s move our attention to the first section of code where we initialize all of our data. The comments in the following code explains what each line is/what it is used for.</p>
+</section>
+<section id="single-model" class="level2">
+<h2 class="anchored" data-anchor-id="single-model">Single Model</h2>
+<section id="data-transforming" class="level3">
+<h3 class="anchored" data-anchor-id="data-transforming">Data Transforming</h3>
+<p>The next part of our function transforms our “raw” data into features we want to use in order to predict whether the raw residual return will move up our down. The before the polynomial transformation the five features we are using for the model are yesterday’s intraday market neutral residual returns, last night’s market neutral residual returns, yesterday’s volume mapped to log space, a RSI indicator, and a MACD indicator.</p>
+</section>
+</section>
+<section id="model-testing" class="level2">
+<h2 class="anchored" data-anchor-id="model-testing">Model Testing</h2>
+<p>The code for testing the model is very similar to the training code, because we need to transform the “raw” data again. One thing you will notice in the code above and below is that we only train and test on companies that have more than 100 valid days of data. This is to ensure we are only adding data that might be representative of the market in that year.</p>
+</section>
+<section id="individual-model-per-company" class="level2">
+<h2 class="anchored" data-anchor-id="individual-model-per-company">Individual Model Per Company</h2>
+<p>The code below is the same code as above just reordered so that we train and test a new model for each individual company. Because we are training multiple models in this case, our functions runtime gets significantly longer.</p>
+</section>
+<section id="print-and-return-statements" class="level2">
+<h2 class="anchored" data-anchor-id="print-and-return-statements">Print and Return Statements</h2>
+<p>The final part of our model function is choosing whether or not we want to print out the effectiveness of our model or return specific metrics. In “print mode” we print out the mean, max, and min accuracy of our model, the percent of data with correct labels, how often we correctly predict whether the price will move up or down, the amount of money our model/s makes over the testing time frame, a very crude estimate of what initial funding is required for the model to be successful, and lastly the percent return we made. All of these act as a quick and easy way to evaluate the effectiveness of our model. In the “return mode” we only return the mean, max, and min accuracy of our model, and the amount of money made. We chose these metrics because they are ideal metrics to create graphs for comparing different models over various time frames.</p>
+</section>
+</section>
+<section id="results" class="level1">
+<h1>Results</h1>
+<section id="generic-examples" class="level2">
+<h2 class="anchored" data-anchor-id="generic-examples">Generic Examples</h2>
+<p>Now that we have gone over how we got our data, built function to transform it, and then built a model function using the transformed data, let switch our attention over to the results of our experiments.</p>
+<p>We can start by testing how a single model does when it is trained on the entirety of 2018 data to predict 2019 and we do not use a polynomial feature map.</p>
+<p>Depending on the metric, the results above look rather good. For most models, a mean accuracy of 52.3% is not that good, however, in the stock market that level of accuracy can make a lot of money as we see above. One metric that we were initially concerned about was the fact that the mean accuracy was so different than the proportion of guesses correct. This meant one of two things, the market shifted a lot year to year, or our models predictions were not actually connected to whether the price moved up or down. After a longer analysis, we realized that while the first concern definitely did have an effect on our metrics it was not significant enough to be causing a 2% difference. So we created the 4th metric “proportion of correct labels”. This metric calculated how often our raw residual return moved in the same direction as our price. Intuitively, this should always move in the same direction, however it was only correct around 95% of the time. So, we believe the difference of 2% from mean accuracy to proportion of correct guesses is due to inaccurate data. At the end of the blog post I will discuss this more talk about ways we might change our data/code in the future.</p>
+</section>
+<section id="total-market-model" class="level2">
+<h2 class="anchored" data-anchor-id="total-market-model">Total Market Model</h2>
+<p>Within each “general model” defined by the heading above (Total Market Model in this case), we specify four different variations of the model. The first variation is a model trained on one one year of data trying to predict the next year (blue label). The second variation is a model trained on two years of date to predict the next year (red label). The third variation is a model trained on one year of data with polynomial feature mapping of the second degree to predict the next year using the same polynomial feature map (green label). The fourth and final variation is the same as the third but trained on two year of data instead of one (black label). In the following figures there are two separate graphs corresponding to the success/accuracy of the four variations of our model over a five year time span. The top graph shows you the profit each variation would have made each year. The bottom graph visualizes the maximum, mean, and minimum accuracy across the companies in our designated market for each variation on a given year. The minimum is signified by the bottom break in the bar, the middle break is the mean, and the top of the bar is the max accuracy.</p>
+<p>We will discuss more general trends across all models later in the blog post. For now we will make some preliminary observations about the Total Market Model. Our Total Market Model made considerable profit most years we tested the data on. Both 2017 and 2018 were considerably worse years than the rest with former being worse than the latter. For most of the years it seems like our polynomial feature mapping improves the one year variation, yet fails to show consistent improvement for our two year variation. At this point it is difficult to see a very strong correlation between the modals accuracy and its profit.</p>
+</section>
+<section id="low-volatility-market-model" class="level2">
+<h2 class="anchored" data-anchor-id="low-volatility-market-model">Low-Volatility Market Model</h2>
+<p>The low volatility market models are trained and tested on only a third of our companies so it is expected that the profits made will be close to a third of the entire market. However, since these companies are in the bottom third of volatility there price movement will be smaller, so we can assume our models will make slightly less than one third. So, what stands out in this model is how successful we are in 2017 compared to the total market model. Across all variations it seems like we are almost matching the profit of the total market model. The only year that does not look promising is 2018. But, other than that, all of the years seem like they are representative of what they should be.</p>
+</section>
+<section id="total-market-w-individual-models-per-company" class="level2">
+<h2 class="anchored" data-anchor-id="total-market-w-individual-models-per-company">Total Market w/ Individual Models Per Company:</h2>
+<p>Our total market w/ independent models does not live up to the expectations we expressed in our hypotheses. Compared to a single model the individual models makes considerably less money. It’s performance in 2017 is the worst we have seen yet. One of the questions that we begin to have is “why do we lose so much money if we have such a considerably normal mean accuracy?” The simple answer is that the market was rather turbulent in 2017 and the price movement was larger, on average, when we made an incorrect guess, than when we made a correct guess. Another thing to note, is that since we are training a model for each company, there are considerably less data points to train on. In fact, when training on one year of data, a single company only has around 240 data points, while the total market model has over one 1,000,000. We suspect this is the main contributor to why our individual models do so much more poorly than the total market model. We also think that the size of the training data is why, when we use polynomial feature mapping and more years of training data, our profit is noticeably higher.</p>
+<p>Everything discussed about the Total Market w/ Individual Models with respect to more data equals better results seems to be exemplified here. Maybe the trend is easier to see because we are only testing on low volatility stocks, but as 2 year has more data than 1 year, 1 year poly has more data than 2 year, 2 year poly has more data than 1 year poly, and our profit increase across all years roughly in that order. While the profit for this model is not as impressive as the other models, it has some of the most consistent results across variations.</p>
+</section>
+<section id="trends-accross-models" class="level2">
+<h2 class="anchored" data-anchor-id="trends-accross-models">Trends Accross Models</h2>
+<p>After looking through all of the results/graphs a few consistencies stand out. The first is that our model does considerably worse in 2017 and 2018 than the rest of the years. My hypothesis is that 2017’s market is actually causing all of our issues. If 2016, 2018, 2019, and 2020 are all normal and 2017 is off we will be using good to predict bad for 2017 and bad to predict good in 2018. A second trend is that more data equals better profits. This trend is less obvious in our models trained on the larger market compared to the individual models because we are already starting with a “sufficient” data pool. However, with the smaller dataset in our individual models, the increases from 1200 (1 year) -&gt; 2400 (2 year) -&gt; 4800 (1 year poly) -&gt; 9600 (2 year poly) data points has a really positive impact on our accuracy and profit. The last thing I want to note is that out of our four variations for each model the polynomial feature mapping consistently had better results than the normal features.</p>
+</section>
+</section>
+<section id="flippr-lite-a-small-note-on-trading-strategies" class="level1">
+<h1>FlippR Lite: A Small Note on Trading Strategies</h1>
+<p>The final tests we conduct is on time series. Whereas averages encapsulate holistic model performance, time series analysis enables us to analyze the model’s predictive power in real time. For this test, we run FlippR lite, a similar flip trading strategy that runs only on price data with less intensive financial metrics.</p>
+<p>FlippR lite is integrated with a portfolio class that keeps track of FlippR’s allocations in real time. The portfolio follows an momentum approach. This means that if we are unsure about what a stock will do, the portfolio will sell the asset and rebalance the holdings around assets that we believe will go up or down (i.e.&nbsp;all eggs in one basket).</p>
+<p>The training set will be 3 years worth of data from 2017 to 2020. In order to prevent overfitting, wel’ll choose 300 random days in no particular order, and look at 10 days worth of financial data before our prediction day. We’ll then test the model’s performance on data from 2020 - 2022, which historically yielded good returns. We may do so as follows:</p>
+<p>The Lite version of the model performed admirable, and was able to increase portfolio value over the course of the two years. Interestingly, we see that certain stretches of time correspond to larger stretches of increasing value in the model. First, this is because market conditions were favorable over the course of 2020 - 2022. However, second, and perhaps more likely, the chosen indactors were good indications of performance. We might also ask how the model performs if we make equal allocations each time we predict; that is, regardless of the prediction we always devide up the current amount of cash in our portfolio equally. We’ll run the exact same test on the exact same time frame, save for this one change:</p>
+<p>The resulting chart has a similar shape to our initial test (which confirms the speculation that market conditions indeed impact the sucess of the model) but the slopes are not as pernounced, and the overall value of the portolio not as high. Finally, we’ll return to the momentum-based strategy on a year when the market performance was not as strong. In this example, we’ll train on 2017 through 2018, and test on 2018 through 2019.</p>
+<p>We can see that in this case the model actually looses some value. Part of this is due to the robustness of the Lite-version of the model: It does not have access to the same level of indicators as the full version. On the otherhand, when the model is wrong it suffers more since it invests a good portion of the portfolio in a bad call. The takeaway here is that the strategy you choose to trade with is just as important as the quality of the model. More moderate strategies shoud be chosen when market conditions are less turbulet, whereas more agressive strategies can be deployed if we are confident in the model. In this case, when way in which we can toy with this feature is the allocation that we place in each stock.</p>
+</section>
+<section id="a-critical-discussion" class="level1">
+<h1>A Critical Discussion</h1>
+<p>An important aspect of any machine learning model is understanding its interactions with society at large. In the conemporary zeitgeist, algorithms (particularly large nueral nets) are endowed with sage-like predictive power and authoritative descision making. In other words, if an algorithm says something, it is absolute and error-free. It could not possibly be bias, or itself make erroneous assumptions. Of course, this is far from the case.</p>
+<p>In finance, we are making predictions about numbers, and hence, we are do not directly impact the wellbeing of society. However, it is important to understand the context that our algorithm resides in and who might be using it. Finance has traditionally been and continues to a place of privledge. This almost entirely a product of cumlative interest, generational wealth, and magnitude of risk. In short, if you have more money, it is less risky and far easier to make more money. Wealth also buys the time to make money, and the connections to people in the industry who know how to do this for you. That being said, likely users of this algorithm are people who are wealthy, and have the disposable income to spend on it.</p>
+<p>A second significant ramification of developing models such as this is the type of stock one might invest in. Here, stocks were chosen blindly without knowing the purpose of a company. We also tested on simulated data so that no money changed hands. However, it is not hard to imagine that one could invest in a company that engages in war-profiteering, pharmaceutical malpractice, or other morally questionable actions. In short, the model could be used to indirectly enable industries that promote cycles of opression. The people who are negatively impacted by such cycles are not the people benefitting from the model.</p>
+<p>Given the known harms, why did we decide to build this model in the first place? One generic–but truthful–answer is that any technological advancement when taken to its logical extreme can be shown to demonstrate harm. Second, and perhaps more appropriate for this particular model, is that finance is often gatekept behind technical jargon, proprietary trading strategies, and social class. By provide an intuitive and free introduction to financial modeling, we hope to make it accessiable to a wider audiance and encourage more diverse interest in the subject matter.</p>
+</section>
+<section id="conclusion" class="level1">
+<h1>Conclusion</h1>
+<p>After all of our analysis we now get to reflect back on our goals and hypotheses that we stated in the beginning of this blog post. At the start of this process we had two main hypotheses. The first was that our individualized models would perform better than a singular model trained on the entire market. And second, our models would be more consistent when trained on the low volatility market compared to the the entire market. Our first hypothesis was completely incorrect. The single models made more money than the individual models in every year and variation. We have already discussed how the size of our training data is probably why our hypothesis failed, so for future analysis I would to collect more data and train these individualized models on three to five years of data rather than just one or two. I suspect that while our results might not get better than the single models, we will see a marked increase in profit for each year of data we add. Our second hypothesis was mostly correct. While it is hard to quantify “consistency” in the stock market I would argue our low volatility models had the most consistent scores and did not lose money when the entire market models did. In further analysis I would also love to explore the behavior of the middle and higher risk stocks to see where our model is most successful and if we even need to break down the risk percentiles further.</p>
+</section>
+<section id="group-contributions" class="level1">
+<h1>Group Contributions</h1>
+<p>The majority of raw data collection and formatting was performed by James. He took a class with Professor Smallwood (provider of data) and got access to data through middfiles which is only accessible if you have taken the class. From this point onwards we both worked on trying to develope a frame work for our predictive model. Using two different approaches we eventually decided on using the model designed by James because it was bug free earlier than Alec’s model. After we hade the code framework set up James created the training loops and visualizations to represent profit and accuracy for different models. These training loops and visualizations ended up taking around 2+ hours to make for each of our four models so while James was running one model he started writing our the descriptions of the functions utilized by the model. Because James did a lot of the training and visualizations Alec wrote out the introduction, critical discussion, and added a significant section to his blog post on the initial approach he had been pursuing.</p>
+<p>I think something that is important to acknowledge is that if you look solely at the commits for final_project_blog_post.ipynb it might seem like James wrote out most of the code used for the final post. However, a major aspect of this project we were not able to fully implement/describe in the final product is the portfolio.py file Alec spent a lot of time coding, debugging, rewriting, and trying to troubleshoot. This file is utilized slightly in Alec’s blog post but for the amount of time and effort he put into it, a commit history will not give him the credit he is due.</p>
+</section>
+<section id="personal-reflection" class="level1">
+<h1>Personal Reflection</h1>
+<section id="personal-reflection-1" class="level2">
+<h2 class="anchored" data-anchor-id="personal-reflection-1">Personal Reflection</h2>
+<p>There are four things that I learned in the process of this proejct: First, how to work with real data. While James took the lead on getting the data into pandas, actually formatting it in a way that was useful to the models took a large amount of engineering effort, especially with respect to its temporial aspect. Second, I felt that I learned a lot about finance specefic technical indicators: what they indicate about a given stock and how they are applied in practice. While the models developed ended up using more traditional indicators, I came accross others in my research like stochastic oscililators and averages of averages. Third, is how to design domain specefic simulations to evaluate the robustness of a model in real time; namely, building out a portfolio simulator and tweakable model. This was supercool, as I note only learned about how to pipe and maninuplate data in pandas, but also was able to tweak and evaluate the models in real time. Finally, I feel like I learned what it is like to work on a machine learning model in “real-life.” That is, starting from wrangling the data, choosing features, to training and reevaluating model performance. It was super rewarding to be able to work with someone who was able to guide me in this process, as well as be able to explore my own crazy ideas.</p>
+<p>The initial goals we set out were to develop profitable models. In this case, we were able to do so. I wanted to also develop some sort of portfolio optimizer using forecasts, however we decided not to do this since regression prediction is hard. This was less of a “failure” and more a change of plans, so I am less incline to say this was a shortcoming in our goals. I wish that we were able to synergize the final model better with the portfolio class, however this ended up feeling more like an exercise in data piping and less machine learning, so we diceded against it. With that being said, I did not expect to be able to develop something that work so well while learning so much, so I am very pleased with what were able to accomplish.</p>
+<p>Finally, I think that this project really solidified my understanding of the course concepts. It was very rewarding to be able to take what I learned in the classroom and feel confident in applying to “real-life” scenearios. The takeaways into real life will be the content learned, the ability to work with real data, and the skills to evaluate and test a simple machine learning model. I also think that it has taught me that a great deal of creativity is required to train good machine learning models, and that a lot of diligence should be put into choosing the right features for the write problem.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
